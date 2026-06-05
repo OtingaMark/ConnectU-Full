@@ -45,4 +45,43 @@ class User extends Authenticatable
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
+    public function profile()
+{
+    return $this->hasOne(Profile::class);
+}
+
+public function studyGroups()
+{
+    return $this->hasMany(StudyGroup::class);
+}
+
+public function skills()
+{
+    return $this->hasMany(Skill::class);
+}
+
+public function resources()
+{
+    return $this->hasMany(Resource::class);
+}
+
+public function sentMessages()
+{
+    return $this->hasMany(Message::class, 'sender_id');
+}
+
+public function receivedMessages()
+{
+    return $this->hasMany(Message::class, 'receiver_id');
+}
+
+public function feedbackGiven()
+{
+    return $this->hasMany(Feedback::class, 'giver_id');
+}
+
+public function feedbackReceived()
+{
+    return $this->hasMany(Feedback::class, 'receiver_id');
+}
 }
