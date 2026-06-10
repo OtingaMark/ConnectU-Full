@@ -8,6 +8,8 @@ use App\Http\Controllers\StudyGroupController;
 use App\Http\Controllers\PeerMatchingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\SkillController;
+use App\Http\Controllers\FeedbackController;
 
 Route::view('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -32,6 +34,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
     Route::get('/resources', [ResourceController::class, 'index'])->name('resources.index');
     Route::post('/resources', [ResourceController::class, 'store'])->name('resources.store');
+    Route::get('/skills', [SkillController::class, 'index'])->name('skills.index');
+    Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
+    Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
 });
 
 require __DIR__.'/settings.php';
