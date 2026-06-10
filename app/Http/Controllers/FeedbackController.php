@@ -6,12 +6,15 @@ use App\Models\Feedback;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class FeedbackController extends Controller
 {
     public function index()
     {
-        $users = User::where('id', '!=', Auth::id())->get();
+        $users = User::where('id', '!=', Auth::id())
+            ->orderBy('name')
+            ->get();
 
         $feedbackGiven = Feedback::with('receiver')
             ->where('giver_id', Auth::id())
@@ -23,16 +26,33 @@ class FeedbackController extends Controller
             ->latest()
             ->get();
 
-        return view('feedback.index', compact('users', 'feedbackGiven', 'feedbackReceived'));
+        return view('feedback.index', compact(
+            'users',
+            'feedbackGiven',
+            'feedbackReceived'
+        ));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'receiver_id' => 'required|exists:users,id',
+            'receiver_id' => [
+                'required',
+                'exists:users,id',
+                Rule::notIn([Auth::id()])
+            ],
             'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string',
+            'comment' => 'nullable|string|max:500',
         ]);
+
+        $alreadyRated = Feedback::where('giver_id', Auth::id())
+            ->where('receiver_id', $validated['receiver_id'])
+            ->exists();
+
+        if ($alreadyRated) {
+            return redirect()->route('feedback.index')
+                ->with('success', 'You have already submitted feedback for this user.');
+        }
 
         Feedback::create([
             'giver_id' => Auth::id(),

@@ -6,12 +6,15 @@ use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class MessageController extends Controller
 {
     public function index()
     {
-        $users = User::where('id', '!=', Auth::id())->get();
+        $users = User::where('id', '!=', Auth::id())
+            ->orderBy('name')
+            ->get();
 
         $receivedMessages = Message::with('sender')
             ->where('receiver_id', Auth::id())
@@ -29,8 +32,12 @@ class MessageController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string',
+            'receiver_id' => [
+                'required',
+                'exists:users,id',
+                Rule::notIn([Auth::id()]),
+            ],
+            'message' => 'required|string|min:2|max:1000',
         ]);
 
         Message::create([

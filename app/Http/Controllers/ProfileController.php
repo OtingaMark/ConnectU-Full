@@ -18,12 +18,12 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'course' => 'required|string|max:255',
-            'bio' => 'nullable|string',
-            'interests' => 'nullable|string',
-            'skills' => 'nullable|string',
-            'availability' => 'nullable|string|max:255',
-        ]);
+    'course' => 'required|string|min:3|max:255',
+    'bio' => 'nullable|string|max:1000',
+    'interests' => 'nullable|string|max:500',
+    'skills' => 'nullable|string|max:500',
+    'availability' => 'nullable|string|max:255',
+    ]);
 
         Profile::updateOrCreate(
             ['user_id' => Auth::id()],

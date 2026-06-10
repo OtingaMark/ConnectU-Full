@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SkillController extends Controller
 {
     public function index()
     {
-        $skills = Skill::with('user')->latest()->get();
+        $skills = Skill::with('user')
+            ->latest()
+            ->get();
 
         return view('skills.index', compact('skills'));
     }
@@ -18,9 +21,12 @@ class SkillController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'skill_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'skill_level' => 'required|string|max:100',
+            'skill_name' => 'required|string|min:2|max:255',
+            'description' => 'nullable|string|max:1000',
+            'skill_level' => [
+                'required',
+                Rule::in(['Beginner', 'Intermediate', 'Advanced']),
+            ],
             'availability' => 'nullable|string|max:255',
         ]);
 
