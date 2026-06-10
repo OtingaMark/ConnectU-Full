@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudyGroupController;
+use App\Http\Controllers\PeerMatchingController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ResourceController;
 
 Route::view('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -24,6 +27,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/study-groups/create', [StudyGroupController::class, 'create'])->name('study-groups.create');
     Route::post('/study-groups', [StudyGroupController::class, 'store'])->name('study-groups.store');
     Route::post('/study-groups/{studyGroup}/join', [StudyGroupController::class, 'join'])->name('study-groups.join');
+    Route::get('/peer-matching', [PeerMatchingController::class, 'index'])->name('peer-matching.index');
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::get('/resources', [ResourceController::class, 'index'])->name('resources.index');
+    Route::post('/resources', [ResourceController::class, 'store'])->name('resources.store');
 });
 
 require __DIR__.'/settings.php';
