@@ -12,13 +12,58 @@
 
             <livewire:team-switcher />
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-            </flux:sidebar.nav>
+            <flux:sidebar.group heading="ConnectU" class="grid">
+
+    <flux:sidebar.item
+        icon="home"
+        :href="route('dashboard')"
+        :current="request()->routeIs('dashboard')">
+        Dashboard
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="user"
+        :href="route('profile.edit')">
+        Profile
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="users"
+        :href="route('peer-matching.index')">
+        Peer Matching
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="book-open"
+        :href="route('study-groups.index')">
+        Learning Groups
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="folder"
+        :href="route('resources.index')">
+        Resources
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="academic-cap"
+        :href="route('skills.index')">
+        Skills
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="chat-bubble-left-right"
+        :href="route('messages.index')">
+        Messages
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="star"
+        :href="route('feedback.index')">
+        Feedback
+    </flux:sidebar.item>
+
+</flux:sidebar.group>
 
             <flux:spacer />
 

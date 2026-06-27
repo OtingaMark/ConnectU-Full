@@ -13,7 +13,25 @@ class StudyGroup extends Model
         'description',
         'max_members',
         'meeting_schedule',
+        'group_picture',
+        'visibility',
+        'requires_approval',
+        'members_can_invite',
+        'status',
+        'suspension_reason',
+        'suspended_at',
     ];
+
+    protected $casts = [
+        'requires_approval' => 'boolean',
+        'members_can_invite' => 'boolean',
+        'suspended_at' => 'datetime',
+    ];
+
+    public function isSuspended(): bool
+    {
+        return strtolower(trim($this->status ?? 'active')) === 'suspended';
+    }
 
     public function user()
     {
@@ -23,5 +41,30 @@ class StudyGroup extends Model
     public function members()
     {
         return $this->hasMany(GroupMember::class);
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(GroupInvitation::class);
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(GroupMessage::class);
+    }
+
+    public function joinRequests()
+    {
+        return $this->hasMany(GroupJoinRequest::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function suspensionAppeals()
+    {
+        return $this->hasMany(GroupSuspensionAppeal::class);
     }
 }

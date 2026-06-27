@@ -12,6 +12,9 @@ class SkillController extends Controller
     public function index()
     {
         $skills = Skill::with('user')
+            ->whereHas('user', function ($query) {
+                $query->where('status', 'active');
+            })
             ->latest()
             ->get();
 
@@ -23,6 +26,14 @@ class SkillController extends Controller
         $validated = $request->validate([
             'skill_name' => 'required|string|min:2|max:255',
             'description' => 'nullable|string|max:1000',
+            'category' => [
+                'required',
+                Rule::in(['Academic', 'Programming', 'Sports', 'Music', 'Public Speaking', 'Design', 'Other']),
+            ],
+            'skill_type' => [
+                'required',
+                Rule::in(['teach', 'learn']),
+            ],
             'skill_level' => [
                 'required',
                 Rule::in(['Beginner', 'Intermediate', 'Advanced']),
@@ -34,6 +45,8 @@ class SkillController extends Controller
             'user_id' => Auth::id(),
             'skill_name' => $validated['skill_name'],
             'description' => $validated['description'] ?? null,
+            'category' => $validated['category'],
+            'skill_type' => $validated['skill_type'],
             'skill_level' => $validated['skill_level'],
             'availability' => $validated['availability'] ?? null,
         ]);

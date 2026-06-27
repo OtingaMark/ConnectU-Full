@@ -9,6 +9,7 @@ class Feedback extends Model
     protected $fillable = [
         'giver_id',
         'receiver_id',
+        'feedback_type',
         'rating',
         'comment',
     ];

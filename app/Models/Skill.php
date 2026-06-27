@@ -10,6 +10,8 @@ class Skill extends Model
         'user_id',
         'skill_name',
         'description',
+        'category',
+        'skill_type',
         'skill_level',
         'availability',
     ];

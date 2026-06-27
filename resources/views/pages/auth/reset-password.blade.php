@@ -1,54 +1,70 @@
-<x-layouts::auth :title="__('Reset password')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Reset password')" :description="__('Please enter your new password below')" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - ConnectU</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-gray-100 text-gray-900">
 
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
+<div class="min-h-screen flex items-center justify-center px-6">
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
 
-        <form method="POST" action="{{ route('password.update') }}" class="flex flex-col gap-6">
-            @csrf
-            <!-- Token -->
-            <input type="hidden" name="token" value="{{ request()->route('token') }}">
-
-            <!-- Email Address -->
-            <flux:input
-                name="email"
-                value="{{ request('email') }}"
-                :label="__('Email')"
-                type="email"
-                required
-                autocomplete="email"
-            />
-
-            <!-- Password -->
-            <flux:input
-                name="password"
-                :label="__('Password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Password')"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
-
-            <!-- Confirm Password -->
-            <flux:input
-                name="password_confirmation"
-                :label="__('Confirm password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Confirm password')"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
-
-            <div class="flex items-center justify-end">
-                <flux:button type="submit" variant="primary" class="w-full" data-test="reset-password-button">
-                    {{ __('Reset password') }}
-                </flux:button>
+        <div class="p-12 flex flex-col items-center justify-center text-center border-r">
+            <div class="w-24 h-24 border-2 border-gray-300 flex items-center justify-center text-gray-500 mb-6">
+                LOGO
             </div>
-        </form>
+
+            <h1 class="text-3xl font-bold text-gray-900">Create New Password</h1>
+            <p class="text-gray-600 mt-3">
+                Enter your new password to regain access to ConnectU.
+            </p>
+        </div>
+
+        <div class="p-12">
+            <h2 class="text-2xl font-bold text-center mb-8">Reset Password</h2>
+
+            <form method="POST" action="{{ route('password.update') }}" class="space-y-5">
+                @csrf
+
+                <input type="hidden" name="token" value="{{ request()->route('token') }}">
+
+                <div>
+                    <label class="block font-semibold mb-2">Email</label>
+                    <input type="email" name="email" value="{{ old('email', request()->email) }}" required autofocus
+                           placeholder="Enter your email"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-2">New Password</label>
+                    <input type="password" name="password" required
+                           placeholder="Create new password"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-2">Confirm Password</label>
+                    <input type="password" name="password_confirmation" required
+                           placeholder="Confirm new password"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800">
+                    Reset Password
+                </button>
+            </form>
+
+            <p class="text-center text-sm mt-6">
+                Remember your password?
+                <a href="{{ route('login') }}" class="text-blue-600 hover:underline">Login</a>
+            </p>
+        </div>
+
     </div>
-</x-layouts::auth>
+</div>
+
+</body>
+</html>

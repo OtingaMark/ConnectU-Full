@@ -1,31 +1,56 @@
-<x-layouts::auth :title="__('Forgot password')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Forgot password')" :description="__('Enter your email to receive a password reset link')" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - ConnectU</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-gray-100 text-gray-900">
 
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
+<div class="min-h-screen flex items-center justify-center px-6">
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
 
-        <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
-            @csrf
+        <div class="p-12 flex flex-col items-center justify-center text-center border-r">
+            <div class="w-24 h-24 border-2 border-gray-300 flex items-center justify-center text-gray-500 mb-6">
+                LOGO
+            </div>
 
-            <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                type="email"
-                required
-                autofocus
-                placeholder="email@example.com"
-            />
-
-            <flux:button variant="primary" type="submit" class="w-full" data-test="email-password-reset-link-button">
-                {{ __('Email password reset link') }}
-            </flux:button>
-        </form>
-
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
-            <span>{{ __('Or, return to') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('log in') }}</flux:link>
+            <h1 class="text-3xl font-bold text-gray-900">Reset Password</h1>
+            <p class="text-gray-600 mt-3">
+                Enter your email and we will send you a password reset link.
+            </p>
         </div>
+
+        <div class="p-12">
+            <h2 class="text-2xl font-bold text-center mb-8">Forgot Password</h2>
+
+            <x-auth-session-status class="text-center" :status="session('status')" />
+
+            <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
+                @csrf
+
+                <div>
+                    <label class="block font-semibold mb-2">Email</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required autofocus
+                           placeholder="Enter your email"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800">
+                    Email Password Reset Link
+                </button>
+            </form>
+
+            <p class="text-center text-sm mt-6">
+                Remember your password?
+                <a href="{{ route('login') }}" class="text-blue-600 hover:underline">Login</a>
+            </p>
+        </div>
+
     </div>
-</x-layouts::auth>
+</div>
+
+</body>
+</html>

@@ -3,19 +3,177 @@
 namespace App\Http\Controllers;
 
 use App\Models\GroupMember;
+use App\Models\GroupInvitation;
+use App\Models\GroupJoinRequest;
+use App\Models\GroupMessage;
+use App\Models\GroupSuspensionAppeal;
+use App\Models\PeerConnection;
 use App\Models\StudyGroup;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
 
 class StudyGroupController extends Controller
 {
     public function index()
     {
-        $studyGroups = StudyGroup::with(['user', 'members'])
+        $myProfile = auth()->user()->profile;
+
+        $studyGroups = StudyGroup::with(['user', 'members', 'invitations'])
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->where('visibility', 'public')
+                    ->orWhere('user_id', Auth::id())
+                    ->orWhereHas('members', function ($q) {
+                        $q->where('user_id', Auth::id());
+                    })
+                    ->orWhereHas('invitations', function ($q) {
+                        $q->where('receiver_id', Auth::id())
+                            ->where('status', 'pending');
+                    });
+            })
             ->latest()
             ->get();
 
+        foreach ($studyGroups as $group) {
+            $score = 0;
+
+            if ($myProfile) {
+
+                $myCourse = strtolower(trim($myProfile->course ?? ''));
+                $groupCourse = strtolower(trim($group->course ?? ''));
+
+                if (
+                    $myCourse &&
+                    $groupCourse &&
+                    (
+                        str_contains($groupCourse, $myCourse) ||
+                        str_contains($myCourse, $groupCourse) ||
+                        (str_contains($groupCourse, 'informatics') && str_contains($myCourse, 'informatics'))
+                    )
+                ) {
+                    $score += 50;
+                }
+
+                $interests = strtolower(
+                    ($myProfile->interests ?? '') . ' ' .
+                    ($myProfile->skills ?? '')
+                );
+
+                $groupText = strtolower(
+                    ($group->group_name ?? '') . ' ' .
+                    ($group->description ?? '')
+                );
+
+                $interestWords = preg_split('/[\s,]+/', $interests);
+
+                foreach ($interestWords as $word) {
+                    $word = rtrim($word, 's');
+
+                    if (strlen($word) > 2 && str_contains($groupText, $word)) {
+                        $score += 10;
+                    }
+                }
+            }
+
+            $group->match_score = min($score, 100);
+
+            $group->is_joined = GroupMember::where('user_id', Auth::id())
+                ->where('study_group_id', $group->id)
+                ->exists();
+
+            $group->my_invitation = GroupInvitation::where('receiver_id', Auth::id())
+                ->where('study_group_id', $group->id)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($group->is_joined) {
+                $group->sort_order = 1;
+            } elseif ($group->my_invitation) {
+                $group->sort_order = 2;
+            } else {
+                $group->sort_order = 3;
+            }
+        }
+
+        $studyGroups = $studyGroups
+            ->sortBy([
+                ['sort_order', 'asc'],
+                ['match_score', 'desc'],
+            ])
+            ->values();
+
         return view('study-groups.index', compact('studyGroups'));
+    }
+
+    public function show(StudyGroup $studyGroup)
+    {
+        $studyGroup->load(['user', 'members.user.profile', 'invitations.receiver', 'invitations.sender', 'messages.user']);
+
+        $myMembership = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        $canManageGroup = (int) $studyGroup->user_id === (int) Auth::id()
+            || ($myMembership && in_array($myMembership->role, ['creator', 'admin']));
+
+        if ($studyGroup->isSuspended() && !$canManageGroup) {
+            abort(403);
+        }
+
+        $isMember = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->exists();
+
+        $hasActiveInvitation = GroupInvitation::where('study_group_id', $studyGroup->id)
+            ->where('receiver_id', Auth::id())
+            ->where('status', 'pending')
+            ->exists();
+
+        if (
+            $studyGroup->visibility === 'private' &&
+            $studyGroup->user_id !== Auth::id() &&
+            !$isMember &&
+            !$hasActiveInvitation
+        ) {
+            abort(403);
+        }
+
+        $memberIds = GroupMember::where('study_group_id', $studyGroup->id)
+            ->pluck('user_id')
+            ->toArray();
+
+        $invitedIds = GroupInvitation::where('study_group_id', $studyGroup->id)
+            ->where('status', 'pending')
+            ->pluck('receiver_id')
+            ->toArray();
+
+        $canInviteMembers = $canManageGroup || (
+            $myMembership && $studyGroup->members_can_invite
+        );
+
+        $connectedUserIds = PeerConnection::where('status', 'accepted')
+            ->where(function ($query) {
+                $query->where('requester_id', Auth::id())
+                    ->orWhere('receiver_id', Auth::id());
+            })
+            ->get()
+            ->map(function ($connection) {
+                return $connection->requester_id == Auth::id()
+                    ? $connection->receiver_id
+                    : $connection->requester_id;
+            });
+
+        $inviteUsers = User::whereIn('id', $connectedUserIds)
+            ->active()
+            ->whereNotIn('id', $memberIds)
+            ->whereNotIn('id', $invitedIds)
+            ->orderBy('name')
+            ->get();
+
+        return view('study-groups.show', compact('studyGroup', 'inviteUsers', 'canInviteMembers'));
     }
 
     public function create()
@@ -31,7 +189,19 @@ class StudyGroupController extends Controller
             'description' => 'nullable|string|max:1000',
             'max_members' => 'required|integer|min:2|max:100',
             'meeting_schedule' => 'nullable|string|max:255',
+            'visibility' => 'required|in:public,private',
+            'requires_approval' => 'nullable|boolean',
+            'members_can_invite' => 'nullable|boolean',
+            'group_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ]);
+
+        $validated['requires_approval'] = $request->has('requires_approval');
+        $validated['members_can_invite'] = $request->has('members_can_invite');
+
+        if ($request->hasFile('group_picture')) {
+            $validated['group_picture'] = $request->file('group_picture')
+                ->store('group-pictures', 'public');
+        }
 
         $studyGroup = StudyGroup::create($validated + [
             'user_id' => Auth::id(),
@@ -45,11 +215,16 @@ class StudyGroupController extends Controller
         ]);
 
         return redirect()->route('study-groups.index')
-            ->with('success', 'Study group created successfully.');
+            ->with('success', 'Learning group created successfully.');
     }
 
     public function join(StudyGroup $studyGroup)
     {
+        if ($studyGroup->isSuspended()) {
+            return redirect()->route('study-groups.index')
+                ->with('error', 'This learning group is currently suspended.');
+        }
+
         $alreadyJoined = GroupMember::where('user_id', Auth::id())
             ->where('study_group_id', $studyGroup->id)
             ->exists();
@@ -63,7 +238,22 @@ class StudyGroupController extends Controller
 
         if ($currentMembers >= $studyGroup->max_members) {
             return redirect()->route('study-groups.index')
-                ->with('success', 'This study group is already full.');
+                ->with('error', 'This learning group is already full.');
+        }
+
+        if ($studyGroup->requires_approval) {
+            GroupJoinRequest::updateOrCreate(
+                [
+                    'study_group_id' => $studyGroup->id,
+                    'user_id' => Auth::id(),
+                ],
+                [
+                    'status' => 'pending',
+                ]
+            );
+
+            return redirect()->route('study-groups.index')
+                ->with('success', 'Your request to join this group has been sent.');
         }
 
         GroupMember::create([
@@ -74,6 +264,434 @@ class StudyGroupController extends Controller
         ]);
 
         return redirect()->route('study-groups.index')
-            ->with('success', 'You have joined the study group successfully.');
+            ->with('success', 'You have joined the learning group successfully.');
+    }
+
+    public function invite(Request $request, StudyGroup $studyGroup)
+    {
+        if ($studyGroup->isSuspended()) {
+            return back()->with('error', 'Invitations are disabled while this group is suspended.');
+        }
+
+        $myMembership = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        $canManageGroup = $myMembership && in_array($myMembership->role, ['creator', 'admin']);
+
+        $canInviteMembers = $canManageGroup || (
+            $myMembership && $studyGroup->members_can_invite
+        );
+
+        if (!$canInviteMembers) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+        ]);
+
+        $receiver = User::query()->active()->find($validated['receiver_id']);
+        if (!$receiver) {
+            return back()->with('error', 'You can only invite active users.');
+        }
+
+        $alreadyMember = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', $validated['receiver_id'])
+            ->exists();
+
+        if ($alreadyMember) {
+            return back()->with('success', 'This user is already a member of the group.');
+        }
+
+        GroupInvitation::firstOrCreate([
+            'study_group_id' => $studyGroup->id,
+            'receiver_id' => $validated['receiver_id'],
+        ], [
+            'sender_id' => Auth::id(),
+            'status' => 'pending',
+        ]);
+
+        return back()->with('success', 'Group invitation sent successfully.');
+    }
+
+    public function sendMessage(Request $request, StudyGroup $studyGroup)
+    {
+        if ($studyGroup->isSuspended()) {
+            return back()->with('error', 'Messaging is disabled while this group is suspended.');
+        }
+
+        $isMember = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->exists();
+
+        if (!$isMember) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'message' => 'nullable|string|max:1000',
+            'message_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png|max:20480',
+            'resource_link' => 'nullable|url|max:500',
+        ]);
+
+        if (
+            empty($validated['message']) &&
+            !$request->hasFile('message_file') &&
+            empty($validated['resource_link'])
+        ) {
+            return back()->with('error', 'Please type a message, attach a file, or add a link.');
+        }
+
+        $filePath = null;
+        $messageType = 'text';
+
+        if ($request->hasFile('message_file')) {
+            $filePath = $request->file('message_file')->store('group-messages', 'public');
+            $messageType = 'file';
+        }
+
+        if (!empty($validated['resource_link'])) {
+            $messageType = $filePath ? 'mixed' : 'link';
+        }
+
+        GroupMessage::create([
+            'study_group_id' => $studyGroup->id,
+            'user_id' => Auth::id(),
+            'message' => $validated['message'] ?? '',
+            'file_path' => $filePath,
+            'resource_link' => $validated['resource_link'] ?? null,
+            'message_type' => $messageType,
+        ]);
+
+        return back()->with('success', 'Message sent to group.');
+    }
+
+    public function groupAttachment(GroupMessage $message)
+    {
+        $isMember = GroupMember::where('study_group_id', $message->study_group_id)
+            ->where('user_id', Auth::id())
+            ->exists();
+
+        if (!$isMember) {
+            abort(403);
+        }
+
+        if (!$message->file_path || !Storage::disk('public')->exists($message->file_path)) {
+            abort(404);
+        }
+
+        return response()->file(storage_path('app/public/' . $message->file_path));
+    }
+
+    public function leave(StudyGroup $studyGroup)
+    {
+        $membership = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$membership) {
+            return redirect()->route('study-groups.index')
+                ->with('error', 'You are not a member of this group.');
+        }
+
+        if ($membership->role === 'creator') {
+            $otherAdmins = GroupMember::where('study_group_id', $studyGroup->id)
+                ->where('user_id', '!=', Auth::id())
+                ->whereIn('role', ['creator', 'admin'])
+                ->count();
+
+            if ($otherAdmins === 0) {
+                return back()->with('error', 'You are the only admin of this group. Promote another member before leaving.');
+            }
+        }
+
+        $membership->delete();
+
+        GroupMessage::create([
+            'study_group_id' => $studyGroup->id,
+            'user_id' => Auth::id(),
+            'message' => auth()->user()->name . ' left the group.',
+            'message_type' => 'system',
+        ]);
+
+        return redirect()->route('study-groups.index')
+            ->with('success', 'You left the group successfully.');
+    }
+
+    private function getMyGroupRole(StudyGroup $studyGroup): ?string
+    {
+        return GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->value('role');
+    }
+
+    private function userCanManageGroup(StudyGroup $studyGroup): bool
+    {
+        return in_array($this->getMyGroupRole($studyGroup), ['creator', 'admin']);
+    }
+
+    private function adminCount(StudyGroup $studyGroup): int
+    {
+        return GroupMember::where('study_group_id', $studyGroup->id)
+            ->whereIn('role', ['creator', 'admin'])
+            ->count();
+    }
+
+    public function promoteMember(StudyGroup $studyGroup, GroupMember $member)
+    {
+        $myRole = $this->getMyGroupRole($studyGroup);
+
+        if (!$this->userCanManageGroup($studyGroup)) {
+            abort(403);
+        }
+
+        if ($member->study_group_id !== $studyGroup->id) {
+            abort(404);
+        }
+
+        if ($member->role !== 'member') {
+            return back()->with('error', 'Only normal members can be promoted.');
+        }
+
+        $member->update(['role' => 'admin']);
+
+        return back()->with('success', 'Member promoted to admin successfully.');
+    }
+
+    public function demoteMember(StudyGroup $studyGroup, GroupMember $member)
+    {
+        $myRole = $this->getMyGroupRole($studyGroup);
+
+        if ($myRole !== 'creator') {
+            return back()->with('error', 'Only the group creator can demote admins.');
+        }
+
+        if ($member->study_group_id !== $studyGroup->id) {
+            abort(404);
+        }
+
+        if ($member->role === 'creator') {
+            return back()->with('error', 'You cannot demote the group creator.');
+        }
+
+        if ($member->role !== 'admin') {
+            return back()->with('error', 'Only admins can be demoted.');
+        }
+
+        if ($this->adminCount($studyGroup) <= 1) {
+            return back()->with('error', 'You cannot demote the last admin.');
+        }
+
+        $member->update(['role' => 'member']);
+
+        return back()->with('success', 'Admin demoted to member successfully.');
+    }
+
+    public function removeMember(StudyGroup $studyGroup, GroupMember $member)
+    {
+        $myRole = $this->getMyGroupRole($studyGroup);
+
+        if (!$this->userCanManageGroup($studyGroup)) {
+            abort(403);
+        }
+
+        if ($member->study_group_id !== $studyGroup->id) {
+            abort(404);
+        }
+
+        if ($member->role === 'creator') {
+            return back()->with('error', 'You cannot remove the group creator.');
+        }
+
+        if ($member->user_id === Auth::id()) {
+            return back()->with('error', 'Use the Leave Group button to remove yourself.');
+        }
+
+        if ($myRole === 'admin' && $member->role === 'admin') {
+            return back()->with('error', 'Admins cannot remove other admins.');
+        }
+
+        if (in_array($member->role, ['creator', 'admin']) && $this->adminCount($studyGroup) <= 1) {
+            return back()->with('error', 'You cannot remove the last admin.');
+        }
+
+        $member->delete();
+
+        GroupMessage::create([
+            'study_group_id' => $studyGroup->id,
+            'user_id' => Auth::id(),
+            'message' => $member->user->name . ' was removed from the group.',
+            'message_type' => 'system',
+        ]);
+
+        return back()->with('success', 'Member removed successfully.');
+    }
+
+    public function edit(StudyGroup $studyGroup)
+    {
+        $membership = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->whereIn('role', ['creator', 'admin'])
+            ->first();
+
+        if (!$membership) {
+            abort(403);
+        }
+
+        return view('study-groups.edit', compact('studyGroup'));
+    }
+
+    public function update(Request $request, StudyGroup $studyGroup)
+    {
+        $membership = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->whereIn('role', ['creator', 'admin'])
+            ->first();
+
+        if (!$membership) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'group_name' => 'required|string|min:3|max:255',
+            'course' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'max_members' => 'required|integer|min:2|max:100',
+            'meeting_schedule' => 'nullable|string|max:255',
+            'visibility' => 'required|in:public,private',
+            'requires_approval' => 'nullable|boolean',
+            'members_can_invite' => 'nullable|boolean',
+            'group_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        ]);
+
+        $validated['requires_approval'] = $request->has('requires_approval');
+        $validated['members_can_invite'] = $request->has('members_can_invite');
+
+        if ($request->hasFile('group_picture')) {
+            $validated['group_picture'] = $request->file('group_picture')
+                ->store('group-pictures', 'public');
+        }
+
+        $currentMembers = GroupMember::where('study_group_id', $studyGroup->id)->count();
+
+        if ($validated['max_members'] < $currentMembers) {
+            return back()
+                ->withInput()
+                ->with('error', 'Maximum members cannot be less than current group members.');
+        }
+
+        $studyGroup->update($validated);
+
+        return redirect()
+            ->route('study-groups.show', $studyGroup->id)
+            ->with('success', 'Group settings updated successfully.');
+    }
+
+    public function requestToJoin(StudyGroup $studyGroup)
+    {
+        if ($studyGroup->isSuspended()) {
+            return back()->with('error', 'This study group is currently suspended.');
+        }
+
+        $alreadyMember = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->exists();
+
+        if ($alreadyMember) {
+            return back()->with('success', 'You are already a member of this group.');
+        }
+
+        GroupJoinRequest::updateOrCreate(
+            [
+                'study_group_id' => $studyGroup->id,
+                'user_id' => Auth::id(),
+            ],
+            [
+                'status' => 'pending',
+            ]
+        );
+
+        return back()->with('success', 'Join request sent.');
+    }
+
+    public function approveJoinRequest(GroupJoinRequest $joinRequest)
+    {
+        $studyGroup = $joinRequest->studyGroup;
+
+        if (!$this->userCanManageGroup($studyGroup)) {
+            abort(403);
+        }
+
+        GroupMember::firstOrCreate([
+            'study_group_id' => $studyGroup->id,
+            'user_id' => $joinRequest->user_id,
+        ], [
+            'role' => 'member',
+            'joined_at' => now(),
+        ]);
+
+        GroupMessage::create([
+            'study_group_id' => $studyGroup->id,
+            'user_id' => $joinRequest->user_id,
+            'message' => $joinRequest->user->name . ' joined the group.',
+            'message_type' => 'system',
+        ]);
+
+        $joinRequest->update(['status' => 'approved']);
+
+        return back()->with('success', 'Join request approved.');
+    }
+
+    public function declineJoinRequest(GroupJoinRequest $joinRequest)
+    {
+        $studyGroup = $joinRequest->studyGroup;
+
+        if (!$this->userCanManageGroup($studyGroup)) {
+            abort(403);
+        }
+
+        $joinRequest->update(['status' => 'declined']);
+
+        return back()->with('success', 'Join request declined.');
+    }
+
+    public function appealSuspension(Request $request, StudyGroup $studyGroup)
+    {
+        $membership = GroupMember::where('study_group_id', $studyGroup->id)
+            ->where('user_id', Auth::id())
+            ->where('role', 'creator')
+            ->first();
+
+        if (!$membership) {
+            abort(403);
+        }
+
+        if (!$studyGroup->isSuspended()) {
+            return back()->with('error', 'This group is not suspended.');
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:255',
+            'message' => 'required|string|min:10|max:2000',
+        ]);
+
+        $hasPending = GroupSuspensionAppeal::where('study_group_id', $studyGroup->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($hasPending) {
+            return back()->with('error', 'A group appeal is already pending review.');
+        }
+
+        GroupSuspensionAppeal::create([
+            'study_group_id' => $studyGroup->id,
+            'requester_id' => Auth::id(),
+            'reason' => $validated['reason'],
+            'message' => $validated['message'],
+            'status' => 'pending',
+        ]);
+
+        return back()->with('success', 'Group suspension appeal submitted successfully.');
     }
 }

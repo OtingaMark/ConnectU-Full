@@ -13,6 +13,13 @@ class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
     public function toResponse($request): Response
     {
         $user = $request->user();
+
+        if ($user && strtolower(trim($user->role ?? '')) === 'admin') {
+            return $request->wantsJson()
+                ? new JsonResponse(['two_factor' => false], 200)
+                : redirect()->intended(route('admin.dashboard'));
+        }
+
         $team = $user?->currentTeam ?? $user?->personalTeam();
 
         if (! $team) {

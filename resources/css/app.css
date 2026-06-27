@@ -61,6 +61,17 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
+.connectu-logo {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+}
+
+.sidebar .connectu-logo {
+    width: 52px;
+    height: 52px;
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
