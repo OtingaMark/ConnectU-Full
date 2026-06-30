@@ -23,4 +23,9 @@ class Feedback extends Model
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
 }

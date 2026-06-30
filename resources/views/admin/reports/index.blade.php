@@ -66,6 +66,28 @@
                                 @elseif($report->directMessage)
                                     <div>Direct Msg</div>
                                     <div class="text-xs text-gray-500 dark:text-gray-300">{{ \Illuminate\Support\Str::limit($report->directMessage->message, 120) }}</div>
+                                @elseif($report->feedback)
+                                    <div>Peer Feedback</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-300">
+                                        Sender: {{ $report->feedback->giver->name ?? 'Unknown' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-300">
+                                        Receiver: {{ $report->feedback->receiver->name ?? 'Unknown' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-300">
+                                        Rating: {{ $report->feedback->rating ?? 'N/A' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-300">
+                                        {{ \Illuminate\Support\Str::limit($report->feedback->comment, 120) }}
+                                    </div>
+                                @elseif($report->skill)
+                                    <div>Skill Listing</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-300">
+                                        Skill: {{ $report->skill->skill_name ?? 'Unknown' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-300">
+                                        Owner: {{ $report->skill->user->name ?? 'Unknown' }}
+                                    </div>
                                 @else
                                     <div>Unknown target</div>
                                 @endif
@@ -122,7 +144,7 @@
                                                 </form>
                                             @endif
 
-                                            @if($report->group_message_id || $report->direct_message_id || $report->study_group_id)
+                                            @if($report->group_message_id || $report->direct_message_id || $report->study_group_id || $report->feedback_id || $report->skill_id)
                                                 <form method="POST" action="{{ route('admin.reports.delete-content', $report) }}" onsubmit="return confirm('Delete reported content and resolve this report?');">
                                                     @csrf
                                                     @method('DELETE')
@@ -181,6 +203,10 @@
                                     Group message
                                 @elseif($report->directMessage)
                                     Direct message
+                                @elseif($report->feedback)
+                                    Feedback
+                                @elseif($report->skill)
+                                    Skill
                                 @else
                                     Unknown
                                 @endif

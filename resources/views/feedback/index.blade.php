@@ -165,7 +165,7 @@
                                      data-rating="{{ $feedback->rating }}">
                                 <div class="flex justify-between items-start gap-3">
                                     <div>
-                                        <p class="font-semibold text-gray-900 dark:text-white">From {{ $feedback->giver->name ?? 'Unknown' }}</p>
+                                        <p class="font-semibold text-gray-900 dark:text-white">Anonymous peer feedback</p>
                                         <p class="text-xs text-gray-500 dark:text-gray-300">{{ $feedback->created_at }}</p>
                                     </div>
                                     <span class="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700">{{ $feedback->rating }}/5</span>
@@ -178,8 +178,13 @@
                                             class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">Helpful</button>
                                     <button type="button" onclick="comingSoonFeedback('Reply to feedback will be enabled in a backend update.')"
                                             class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">Reply</button>
-                                    <button type="button" onclick="comingSoonFeedback('Report feedback flow is not wired yet.')"
-                                            class="px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100">Report</button>
+                                    <form method="POST" action="{{ route('reports.store') }}">
+                                        @csrf
+                                        <input type="hidden" name="feedback_id" value="{{ $feedback->id }}">
+                                        <input type="hidden" name="reason" value="Inappropriate Feedback">
+                                        <input type="hidden" name="description" value="Reported from peer feedback panel.">
+                                        <button type="submit" class="px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100">Report</button>
+                                    </form>
                                 </div>
                             </article>
                         @endforeach

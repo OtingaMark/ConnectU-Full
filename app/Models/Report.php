@@ -12,6 +12,8 @@ class Report extends Model
         'study_group_id',
         'group_message_id',
         'direct_message_id',
+        'feedback_id',
+        'skill_id',
         'reason',
         'description',
         'status',
@@ -47,6 +49,16 @@ class Report extends Model
     public function directMessage()
     {
         return $this->belongsTo(Message::class, 'direct_message_id');
+    }
+
+    public function feedback()
+    {
+        return $this->belongsTo(Feedback::class);
+    }
+
+    public function skill()
+    {
+        return $this->belongsTo(Skill::class);
     }
 
     public function reviewer()

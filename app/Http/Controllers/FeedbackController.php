@@ -13,6 +13,7 @@ class FeedbackController extends Controller
     public function index()
     {
         $users = User::active()
+            ->where('role', 'student')
             ->where('id', '!=', Auth::id())
             ->orderBy('name')
             ->get();
@@ -83,7 +84,8 @@ class FeedbackController extends Controller
             'receiver_id' => [
                 'required',
                 Rule::exists('users', 'id')->where(function ($query) {
-                    $query->where('status', 'active');
+                    $query->where('status', 'active')
+                        ->where('role', 'student');
                 }),
                 Rule::notIn([Auth::id()])
             ],
@@ -93,6 +95,7 @@ class FeedbackController extends Controller
 
         $alreadyRated = Feedback::where('giver_id', Auth::id())
             ->where('receiver_id', $validated['receiver_id'])
+            ->where('feedback_type', 'peer')
             ->exists();
 
         if ($alreadyRated) {

@@ -107,6 +107,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('/admin/study-groups/{studyGroup}', [AdminDashboardController::class, 'deleteGroup'])
         ->name('admin.groups.delete');
+
+    Route::delete('/admin/skills/{skill}', [AdminDashboardController::class, 'deleteSkill'])
+        ->name('admin.skills.delete');
 });
 
 Route::prefix('{current_team}')
@@ -168,6 +171,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/resources', [ResourceController::class, 'store'])->name('resources.store');
     Route::get('/skills', [SkillController::class, 'index'])->name('skills.index');
     Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
+    Route::get('/skills/{skill}/edit', [SkillController::class, 'edit'])->name('skills.edit');
+    Route::patch('/skills/{skill}', [SkillController::class, 'update'])->name('skills.update');
+    Route::delete('/skills/{skill}', [SkillController::class, 'destroy'])->name('skills.destroy');
+    Route::get('/skills/{skill}/matches', [SkillController::class, 'matches'])->name('skills.matches');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
     Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
     Route::get('/messages/{message}/attachment', [App\Http\Controllers\MessageController::class, 'attachment'])

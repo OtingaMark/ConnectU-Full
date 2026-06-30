@@ -12,6 +12,7 @@
                         <th>To</th>
                         <th>Rating</th>
                         <th>Comment</th>
+                        <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,6 +35,7 @@
                             </td>
                             <td>{{ $item->rating ?? 'N/A' }}</td>
                             <td>{{ $item->comment ?: 'No comment' }}</td>
+                            <td>{{ optional($item->created_at)->format('Y-m-d H:i') }}</td>
                         </tr>
                     @endforeach
                 </tbody>

@@ -4,12 +4,16 @@
         $allSkills = $skills ?? collect();
         $mySkills = $allSkills->where('user_id', auth()->id())->values();
 
+        $normalizedType = function ($skill) {
+            return \App\Models\Skill::normalizedType($skill->skill_type ?? null);
+        };
+
         $isLearning = function ($skill) {
-            return strtolower((string) ($skill->skill_type ?? '')) === 'learn';
+            return \App\Models\Skill::normalizedType($skill->skill_type ?? null) === \App\Models\Skill::TYPE_WANT_TO_LEARN;
         };
 
         $isTeaching = function ($skill) {
-            return strtolower((string) ($skill->skill_type ?? 'teach')) === 'teach';
+            return \App\Models\Skill::normalizedType($skill->skill_type ?? null) === \App\Models\Skill::TYPE_CAN_TEACH;
         };
 
         $myLearningSkills = $mySkills->filter($isLearning)->values();
@@ -106,8 +110,10 @@
                 <select name="skill_type" required
                         class="xl:col-span-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
                     <option value="">Skill type</option>
-                    <option value="teach">I can teach this</option>
-                    <option value="learn">I want to learn this</option>
+                    <option value="can_teach">Can teach</option>
+                    <option value="want_to_learn">Wants to learn</option>
+                    <option value="exchange">Exchange</option>
+                    <option value="teamwork">Teamwork</option>
                 </select>
 
                 <select name="skill_level" required
@@ -125,6 +131,14 @@
                 <input type="text" name="description" value="{{ old('description') }}"
                        placeholder="Description"
                        class="xl:col-span-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
+
+                  <input type="text" name="exchange_skill_needed" value="{{ old('exchange_skill_needed') }}"
+                      placeholder="Exchange skill needed (optional)"
+                      class="xl:col-span-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
+
+                  <input type="text" name="collaboration_goal" value="{{ old('collaboration_goal') }}"
+                      placeholder="Collaboration goal (optional)"
+                      class="xl:col-span-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
 
                 <button class="xl:col-span-6 bg-blue-600 text-white rounded-xl px-5 py-3 hover:bg-blue-700 transition">
                     Add Skill
@@ -178,15 +192,28 @@
                             $nameKey = strtolower(trim($skill->skill_name));
                             $offerCount = $allSkills->where('skill_name', $skill->skill_name)->count();
                             $learnCount = $allSkills->filter(function ($s) use ($nameKey) {
-                                $availability = strtolower((string) ($s->availability ?? ''));
                                 return strtolower(trim($s->skill_name)) === $nameKey
-                                    && (str_contains($availability, 'learn') || str_contains($availability, 'beginner'));
+                                    && \App\Models\Skill::normalizedType($s->skill_type ?? null) === \App\Models\Skill::TYPE_WANT_TO_LEARN;
                             })->count();
 
                             $category = $skill->category ?? 'Other';
-                            $skillType = strtolower((string) ($skill->skill_type ?? 'teach'));
+                            $skillType = $normalizedType($skill);
 
                             $isMine = (int) $skill->user_id === (int) auth()->id();
+
+                            $actionLabel = match ($skillType) {
+                                \App\Models\Skill::TYPE_CAN_TEACH => 'Find Learners',
+                                \App\Models\Skill::TYPE_WANT_TO_LEARN => 'Find Teachers',
+                                default => 'Find Partners',
+                            };
+
+                            $typeBadge = match ($skillType) {
+                                \App\Models\Skill::TYPE_CAN_TEACH => 'Can teach',
+                                \App\Models\Skill::TYPE_WANT_TO_LEARN => 'Wants to learn',
+                                \App\Models\Skill::TYPE_EXCHANGE => 'Exchange',
+                                \App\Models\Skill::TYPE_TEAMWORK => 'Teamwork',
+                                default => 'Can teach',
+                            };
                         @endphp
 
                         <article class="skill-card bg-white dark:bg-gray-800 rounded-2xl shadow p-5 hover:shadow-xl hover:-translate-y-0.5 transition min-h-[300px] flex flex-col"
@@ -213,11 +240,7 @@
                                         <div class="flex flex-wrap gap-2 mt-1">
                                             <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">{{ $category }}</span>
                                             <span class="px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-700">{{ $skill->skill_level }}</span>
-                                            @if($skillType === 'learn')
-                                                <span class="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-700">I want to learn this</span>
-                                            @else
-                                                <span class="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700">I can teach this</span>
-                                            @endif
+                                            <span class="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700">{{ $typeBadge }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -231,6 +254,14 @@
                                 {{ $skill->description ?: 'No description yet. Add context so peers can discover this skill faster.' }}
                             </p>
 
+                            @if($skillType === \App\Models\Skill::TYPE_EXCHANGE && !empty($skill->exchange_skill_needed))
+                                <p class="text-xs text-indigo-700 dark:text-indigo-300 mb-2">Exchange: {{ $skill->skill_name }} for {{ $skill->exchange_skill_needed }}</p>
+                            @endif
+
+                            @if($skillType === \App\Models\Skill::TYPE_TEAMWORK && !empty($skill->collaboration_goal))
+                                <p class="text-xs text-purple-700 dark:text-purple-300 mb-2">Teamwork: {{ $skill->collaboration_goal }}</p>
+                            @endif
+
                             <div class="grid grid-cols-2 gap-2 mb-4 text-xs">
                                 <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
                                     <p class="text-gray-500 dark:text-gray-300">Offering</p>
@@ -242,26 +273,31 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-3 gap-2 text-xs">
-                                <a href="{{ route('messages.index', ['user' => $skill->user_id]) }}"
-                                   class="px-2 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-center">Message</a>
-                                <a href="{{ route('users.search', ['search' => $skill->skill_name]) }}"
-                                   class="px-2 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-center">Find Peers</a>
-                                <form method="POST" action="{{ route('reports.store') }}">
-                                    @csrf
-                                    <input type="hidden" name="reported_user_id" value="{{ $skill->user_id }}">
-                                    <input type="hidden" name="reason" value="Inappropriate Content">
-                                    <input type="hidden" name="description" value="Skill listing report from Skills directory.">
-                                    <button type="submit" class="w-full px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Report</button>
-                                </form>
-                            </div>
-
                             @if($isMine)
-                                <div class="grid grid-cols-2 gap-2 mt-2 text-xs">
-                                    <button type="button" onclick="comingSoon('Edit skill route is not implemented yet.')"
-                                            class="px-2 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">Edit</button>
-                                    <button type="button" onclick="confirmAction('Delete this skill? Existing backend delete route is not implemented yet.')"
-                                            class="px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Delete</button>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <a href="{{ route('skills.edit', $skill) }}"
+                                       class="px-2 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 text-center">Edit</a>
+                                    <form method="POST" action="{{ route('skills.destroy', $skill) }}" onsubmit="return confirm('Delete this skill?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-full px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Delete</button>
+                                    </form>
+                                    <a href="{{ route('skills.matches', $skill) }}"
+                                       class="px-2 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-center">{{ $actionLabel }}</a>
+                                </div>
+                            @else
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <a href="{{ route('messages.index', ['user' => $skill->user_id]) }}"
+                                       class="px-2 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-center">Message</a>
+                                    <form method="POST" action="{{ route('reports.store') }}">
+                                        @csrf
+                                        <input type="hidden" name="reported_user_id" value="{{ $skill->user_id }}">
+                                        <input type="hidden" name="reason" value="Inappropriate Content">
+                                        <input type="hidden" name="description" value="Skill listing report from Skills directory.">
+                                        <button type="submit" class="w-full px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Report</button>
+                                    </form>
+                                    <a href="{{ route('messages.index', ['user' => $skill->user_id]) }}"
+                                       class="px-2 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-center">Request Skill Exchange</a>
                                 </div>
                             @endif
                         </article>
@@ -419,16 +455,6 @@
             toast.textContent = message;
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 2400);
-        }
-
-        function comingSoon(message) {
-            showToast(message || 'This action will be enabled in the next backend update.');
-        }
-
-        function confirmAction(message) {
-            if (confirm(message)) {
-                showToast('Action acknowledged. Backend route is not implemented yet.');
-            }
         }
 
         applyFilters();

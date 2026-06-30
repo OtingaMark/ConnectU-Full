@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Feedback;
 use App\Models\GroupMember;
 use App\Models\GroupMessage;
 use App\Models\Message;
 use App\Models\Report;
+use App\Models\Skill;
 use App\Models\StudyGroup;
 use Illuminate\Http\Request;
 
@@ -18,6 +20,8 @@ class ReportController extends Controller
             'study_group_id' => 'nullable|exists:study_groups,id',
             'group_message_id' => 'nullable|exists:group_messages,id',
             'direct_message_id' => 'nullable|exists:messages,id',
+            'feedback_id' => 'nullable|exists:feedback,id',
+            'skill_id' => 'nullable|exists:skills,id',
             'reason' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
         ]);
@@ -27,6 +31,8 @@ class ReportController extends Controller
             $validated['study_group_id'] ?? null,
             $validated['group_message_id'] ?? null,
             $validated['direct_message_id'] ?? null,
+            $validated['feedback_id'] ?? null,
+            $validated['skill_id'] ?? null,
         ];
 
         $targetCount = collect($targets)->filter(fn ($value) => !is_null($value))->count();
@@ -69,12 +75,39 @@ class ReportController extends Controller
             abort_unless($isVisible, 403);
         }
 
+        $reportedUserId = $validated['reported_user_id'] ?? null;
+
+        if (!empty($validated['feedback_id'])) {
+            $feedback = Feedback::with(['giver', 'receiver'])->findOrFail($validated['feedback_id']);
+
+            $canAccess = (int) $feedback->receiver_id === (int) auth()->id()
+                || (int) $feedback->giver_id === (int) auth()->id()
+                || strtolower(trim((string) auth()->user()->role)) === 'admin';
+
+            abort_unless($canAccess, 403);
+
+            $reportedUserId = $feedback->giver_id;
+        }
+
+        if (!empty($validated['skill_id'])) {
+            $skill = Skill::with('user')->findOrFail($validated['skill_id']);
+
+            $canAccess = (int) $skill->user_id !== (int) auth()->id()
+                || strtolower(trim((string) auth()->user()->role)) === 'admin';
+
+            abort_unless($canAccess, 403);
+
+            $reportedUserId = $skill->user_id;
+        }
+
         Report::create([
             'reporter_id' => auth()->id(),
-            'reported_user_id' => $validated['reported_user_id'] ?? null,
+            'reported_user_id' => $reportedUserId,
             'study_group_id' => $validated['study_group_id'] ?? null,
             'group_message_id' => $validated['group_message_id'] ?? null,
             'direct_message_id' => $validated['direct_message_id'] ?? null,
+            'feedback_id' => $validated['feedback_id'] ?? null,
+            'skill_id' => $validated['skill_id'] ?? null,
             'reason' => $validated['reason'],
             'description' => $validated['description'] ?? null,
             'status' => 'pending',

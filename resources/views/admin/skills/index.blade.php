@@ -11,6 +11,7 @@
                         <th>Description</th>
                         <th>Level</th>
                         <th>Owner</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -20,6 +21,13 @@
                             <td>{{ $skill->description ?: 'No description' }}</td>
                             <td>{{ $skill->skill_level }}</td>
                             <td>{{ $skill->user->name ?? 'Unknown' }}</td>
+                            <td>
+                                <form method="POST" action="{{ route('admin.skills.delete', $skill) }}" onsubmit="return confirm('Delete this skill listing?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

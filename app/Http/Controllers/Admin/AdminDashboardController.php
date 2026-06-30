@@ -136,6 +136,9 @@ class AdminDashboardController extends Controller
                 'groupMessage.studyGroup',
                 'directMessage.sender',
                 'directMessage.receiver',
+                'feedback.giver',
+                'feedback.receiver',
+                'skill.user',
                 'reviewer',
             ])
                 ->whereIn('status', ['pending', 'reviewed'])
@@ -149,6 +152,9 @@ class AdminDashboardController extends Controller
                 'groupMessage.studyGroup',
                 'directMessage.sender',
                 'directMessage.receiver',
+                'feedback.giver',
+                'feedback.receiver',
+                'skill.user',
                 'reviewer',
             ])
                 ->whereIn('status', ['resolved', 'rejected'])
@@ -445,6 +451,12 @@ class AdminDashboardController extends Controller
         } elseif ($report->studyGroup) {
             $report->studyGroup->delete();
             $deleted = true;
+        } elseif ($report->feedback) {
+            $report->feedback->delete();
+            $deleted = true;
+        } elseif ($report->skill) {
+            $report->skill->delete();
+            $deleted = true;
         }
 
         if (!$deleted) {
@@ -563,6 +575,14 @@ class AdminDashboardController extends Controller
             return $report->studyGroup->user;
         }
 
+        if ($report->feedback?->giver) {
+            return $report->feedback->giver;
+        }
+
+        if ($report->skill?->user) {
+            return $report->skill->user;
+        }
+
         return null;
     }
 
@@ -601,5 +621,14 @@ class AdminDashboardController extends Controller
         $studyGroup->delete();
 
         return back()->with('success', 'Study group deleted successfully.');
+    }
+
+    public function deleteSkill(Skill $skill)
+    {
+        $this->ensureAdmin();
+
+        $skill->delete();
+
+        return back()->with('success', 'Skill deleted successfully.');
     }
 }
