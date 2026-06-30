@@ -28,6 +28,12 @@
 
             <x-auth-session-status class="text-center" :status="session('status')" />
 
+            @if ($errors->any())
+                <div class="mb-4 rounded-lg bg-red-100 text-red-800 px-4 py-3 text-sm">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             @if(session('error'))
                 <div class="mb-4 rounded-lg bg-red-100 text-red-800 px-4 py-3 text-sm">
                     {{ session('error') }}
@@ -51,13 +57,25 @@
                     <input type="email" name="email" value="{{ old('email') }}" required autofocus
                            placeholder="Enter your email"
                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block font-semibold mb-2">Password</label>
-                    <input type="password" name="password" required
-                           placeholder="Enter your password"
-                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                    <div class="relative">
+                        <input type="password" id="loginPassword" name="password" required
+                               placeholder="Enter your password"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-24 focus:ring-2 focus:ring-blue-500">
+                        <button type="button" id="toggleLoginPassword"
+                                class="absolute inset-y-0 right-3 my-auto text-sm text-blue-700 hover:underline">
+                            Show
+                        </button>
+                    </div>
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="flex justify-between text-sm">
@@ -87,6 +105,23 @@
 
     </div>
 </div>
+
+<script>
+    (function () {
+        const passwordInput = document.getElementById('loginPassword');
+        const toggleButton = document.getElementById('toggleLoginPassword');
+
+        if (!passwordInput || !toggleButton) {
+            return;
+        }
+
+        toggleButton.addEventListener('click', function () {
+            const showing = passwordInput.type === 'text';
+            passwordInput.type = showing ? 'password' : 'text';
+            toggleButton.textContent = showing ? 'Show' : 'Hide';
+        });
+    })();
+</script>
 
 </body>
 </html>

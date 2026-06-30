@@ -28,6 +28,12 @@
 
             <x-auth-session-status class="text-center" :status="session('status')" />
 
+            @if ($errors->any())
+                <div class="mb-4 rounded-lg bg-red-100 text-red-800 px-4 py-3 text-sm">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('register.store') }}" class="space-y-5">
                 @csrf
 
@@ -36,6 +42,9 @@
                     <input type="text" name="name" value="{{ old('name') }}" required autofocus
                            placeholder="Enter your full name"
                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                    @error('name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
@@ -43,20 +52,44 @@
                     <input type="email" name="email" value="{{ old('email') }}" required
                            placeholder="Enter your email"
                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block font-semibold mb-2">Password</label>
-                    <input type="password" name="password" required
-                           placeholder="Create a password"
-                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                    <div class="relative">
+                        <input type="password" id="registerPassword" name="password" required
+                               placeholder="Create a password"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-24 focus:ring-2 focus:ring-blue-500">
+                        <button type="button" id="toggleRegisterPassword"
+                                class="absolute inset-y-0 right-3 my-auto text-sm text-blue-700 hover:underline">
+                            Show
+                        </button>
+                    </div>
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block font-semibold mb-2">Confirm Password</label>
-                    <input type="password" name="password_confirmation" required
-                           placeholder="Confirm your password"
-                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500">
+                    <div class="relative">
+                        <input type="password" id="registerPasswordConfirmation" name="password_confirmation" required
+                               placeholder="Confirm your password"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-24 focus:ring-2 focus:ring-blue-500">
+                        <button type="button" id="toggleRegisterPasswordConfirmation"
+                                class="absolute inset-y-0 right-3 my-auto text-sm text-blue-700 hover:underline">
+                            Show
+                        </button>
+                    </div>
+                    @error('password_confirmation')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    <p id="passwordMismatchHint" class="mt-1 text-sm text-red-600 hidden">
+                        Password and Confirm Password do not match.
+                    </p>
                 </div>
 
                 <button type="submit"
@@ -73,6 +106,46 @@
 
     </div>
 </div>
+
+<script>
+    (function () {
+        const password = document.getElementById('registerPassword');
+        const passwordConfirmation = document.getElementById('registerPasswordConfirmation');
+        const mismatchHint = document.getElementById('passwordMismatchHint');
+
+        const bindToggle = function (inputId, buttonId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+
+            if (!input || !button) {
+                return;
+            }
+
+            button.addEventListener('click', function () {
+                const showing = input.type === 'text';
+                input.type = showing ? 'password' : 'text';
+                button.textContent = showing ? 'Show' : 'Hide';
+            });
+        };
+
+        bindToggle('registerPassword', 'toggleRegisterPassword');
+        bindToggle('registerPasswordConfirmation', 'toggleRegisterPasswordConfirmation');
+
+        if (!password || !passwordConfirmation || !mismatchHint) {
+            return;
+        }
+
+        const checkMismatch = function () {
+            const hasBoth = password.value.length > 0 && passwordConfirmation.value.length > 0;
+            const mismatch = hasBoth && password.value !== passwordConfirmation.value;
+            mismatchHint.classList.toggle('hidden', !mismatch);
+        };
+
+        password.addEventListener('input', checkMismatch);
+        passwordConfirmation.addEventListener('input', checkMismatch);
+        checkMismatch();
+    })();
+</script>
 
 </body>
 </html>
