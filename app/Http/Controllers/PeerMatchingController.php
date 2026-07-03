@@ -56,6 +56,21 @@ class PeerMatchingController extends Controller
 
             $score += count($sharedSkills) * 10;
 
+            $courseScoreMax = (
+                $myProfile->course &&
+                $profile->course
+            ) ? 30 : 0;
+
+            $availabilityScoreMax = (
+                $myProfile->availability &&
+                $profile->availability
+            ) ? 20 : 0;
+
+            $interestScoreMax = min(count($myInterests), count($peerInterests)) * 10;
+            $skillScoreMax = min(count($mySkills), count($peerSkills)) * 10;
+
+            $maxPossibleScore = $courseScoreMax + $availabilityScoreMax + $interestScoreMax + $skillScoreMax;
+
             if (
                 $myProfile->availability &&
                 $profile->availability &&
@@ -76,7 +91,11 @@ class PeerMatchingController extends Controller
 
             })->first();
 
-            $profile->match_score = $score;
+            $profile->raw_match_score = $score;
+
+            $profile->match_score = $maxPossibleScore > 0
+                ? (int) round(min(100, ($score / $maxPossibleScore) * 100))
+                : 0;
 
             $profile->shared_interests =
                 implode(', ', $sharedInterests);
@@ -90,7 +109,7 @@ class PeerMatchingController extends Controller
 
         })
         ->filter(function ($profile) {
-            return $profile->match_score > 0;
+            return $profile->raw_match_score > 0;
         })
         ->sortByDesc('match_score');
 
