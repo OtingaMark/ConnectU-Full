@@ -19,6 +19,21 @@
         $myLearningSkills = $mySkills->filter($isLearning)->values();
         $myTeachingSkills = $mySkills->filter($isTeaching)->values();
 
+        $exchangeNeededSkills = $mySkills
+            ->filter(fn ($skill) => $normalizedType($skill) === \App\Models\Skill::TYPE_EXCHANGE)
+            ->pluck('exchange_skill_needed')
+            ->map(fn ($name) => trim((string) $name))
+            ->filter()
+            ->values();
+
+        $myLearningSkillNames = $myLearningSkills
+            ->pluck('skill_name')
+            ->map(fn ($name) => trim((string) $name))
+            ->merge($exchangeNeededSkills)
+            ->filter()
+            ->unique(fn ($name) => strtolower($name))
+            ->values();
+
         $requestsReceived = 0;
 
         $profile = auth()->user()->profile;
@@ -296,7 +311,7 @@
                                         <input type="hidden" name="description" value="Skill listing report from Skills directory.">
                                         <button type="submit" class="w-full px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Report</button>
                                     </form>
-                                    <a href="{{ route('messages.index', ['user' => $skill->user_id]) }}"
+                                    <a href="{{ route('messages.index', ['user' => $skill->user_id, 'draft' => 'Hi ' . ($skill->user->name ?? '') . ', I would like to request a skill exchange for ' . $skill->skill_name . '.']) }}"
                                        class="px-2 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-center">Request Skill Exchange</a>
                                 </div>
                             @endif
@@ -336,10 +351,10 @@
 
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 mt-6">My Skills - I Want to Learn</h3>
 
-                @if($myLearningSkills->count())
+                @if($myLearningSkillNames->count())
                     <div class="flex flex-wrap gap-2">
-                        @foreach($myLearningSkills as $skill)
-                            <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm">{{ $skill->skill_name }}</span>
+                        @foreach($myLearningSkillNames as $skillName)
+                            <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm">{{ $skillName }}</span>
                         @endforeach
                     </div>
                 @else

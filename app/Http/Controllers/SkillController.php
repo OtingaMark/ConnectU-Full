@@ -117,7 +117,7 @@ class SkillController extends Controller
                 Rule::in(['Beginner', 'Intermediate', 'Advanced']),
             ],
             'availability' => 'nullable|string|max:255',
-            'exchange_skill_needed' => 'nullable|string|max:255',
+            'exchange_skill_needed' => 'nullable|string|max:255|required_if:skill_type,exchange',
             'collaboration_goal' => 'nullable|string|max:255',
         ]);
 

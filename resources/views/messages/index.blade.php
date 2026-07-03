@@ -505,6 +505,7 @@
 
                             <input type="text"
                                    name="message"
+                                value="{{ old('message', $draftMessage ?? '') }}"
                                    placeholder="Type a message"
                                 class="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300 rounded-full px-5 py-3 focus:ring-2 focus:ring-blue-500">
 

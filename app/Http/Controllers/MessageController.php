@@ -16,6 +16,7 @@ class MessageController extends Controller
     public function index()
     {
         $currentUserId = Auth::id();
+        $draftMessage = trim((string) request('draft', ''));
 
         $myGroups = StudyGroup::with(['messages.user', 'members'])
             ->where('status', 'active')
@@ -133,7 +134,8 @@ class MessageController extends Controller
             'chatItems',
             'activeGroupId',
             'activeGroup',
-            'groupMessages'
+            'groupMessages',
+            'draftMessage'
         ));
     }
 
