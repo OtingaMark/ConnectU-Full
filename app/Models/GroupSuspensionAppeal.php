@@ -21,16 +21,25 @@ class GroupSuspensionAppeal extends Model
         'reviewed_at' => 'datetime',
     ];
 
+    /**
+     * Handle study group.
+     */
     public function studyGroup()
     {
         return $this->belongsTo(StudyGroup::class);
     }
 
+    /**
+     * Handle requester.
+     */
     public function requester()
     {
         return $this->belongsTo(User::class, 'requester_id');
     }
 
+    /**
+     * Handle reviewer.
+     */
     public function reviewer()
     {
         return $this->belongsTo(User::class, 'reviewed_by');

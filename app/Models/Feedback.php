@@ -14,16 +14,25 @@ class Feedback extends Model
         'comment',
     ];
 
+    /**
+     * Handle giver.
+     */
     public function giver()
     {
         return $this->belongsTo(User::class, 'giver_id');
     }
 
+    /**
+     * Handle receiver.
+     */
     public function receiver()
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
 
+    /**
+     * Handle reports.
+     */
     public function reports()
     {
         return $this->hasMany(Report::class);

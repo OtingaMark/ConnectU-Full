@@ -4,94 +4,29 @@ namespace App\Http\Controllers;
 
 use App\Models\Skill;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class SkillController extends Controller
 {
-    private function autoExchangeDescription(string $offeredSkillName): string
-    {
-        return 'Added automatically because user wants this skill in exchange for ' . $offeredSkillName . '.';
-    }
+    private array $categories = [
+        'Academic',
+        'Programming',
+        'Technical',
+        'Creative',
+        'Sports',
+        'Language',
+        'Business',
+        'Music',
+        'Public Speaking',
+        'Design',
+        'Other',
+    ];
 
-    private function syncExchangeWantedSkill(Skill $exchangeSkill): void
-    {
-        if (
-            $exchangeSkill->normalized_type !== Skill::TYPE_EXCHANGE ||
-            empty(trim((string) $exchangeSkill->exchange_skill_needed))
-        ) {
-            return;
-        }
-
-        $neededSkillName = trim((string) $exchangeSkill->exchange_skill_needed);
-        $normalizedNeeded = Str::lower($neededSkillName);
-
-        $linkedAutoSkill = Skill::query()
-            ->where('user_id', $exchangeSkill->user_id)
-            ->where('exchange_parent_skill_id', $exchangeSkill->id)
-            ->where('auto_created_from_exchange', true)
-            ->first();
-
-        $existingWantedSkill = Skill::query()
-            ->where('user_id', $exchangeSkill->user_id)
-            ->where('skill_type', Skill::TYPE_WANT_TO_LEARN)
-            ->where('id', '!=', $exchangeSkill->id)
-            ->whereRaw('LOWER(TRIM(skill_name)) = ?', [$normalizedNeeded])
-            ->first();
-
-        $targetSkill = $existingWantedSkill ?? $linkedAutoSkill;
-
-        if (!$targetSkill) {
-            Skill::create([
-                'user_id' => $exchangeSkill->user_id,
-                'skill_name' => $neededSkillName,
-                'description' => $this->autoExchangeDescription($exchangeSkill->skill_name),
-                'category' => $exchangeSkill->category,
-                'skill_type' => Skill::TYPE_WANT_TO_LEARN,
-                'skill_level' => $exchangeSkill->skill_level,
-                'availability' => $exchangeSkill->availability,
-                'auto_created_from_exchange' => true,
-                'exchange_parent_skill_id' => $exchangeSkill->id,
-            ]);
-
-            return;
-        }
-
-        $updates = [
-            'skill_name' => $neededSkillName,
-            'category' => $exchangeSkill->category,
-            'skill_type' => Skill::TYPE_WANT_TO_LEARN,
-            'skill_level' => $exchangeSkill->skill_level,
-            'availability' => $exchangeSkill->availability,
-        ];
-
-        if ($targetSkill->auto_created_from_exchange) {
-            $updates['description'] = $this->autoExchangeDescription($exchangeSkill->skill_name);
-            $updates['exchange_parent_skill_id'] = $exchangeSkill->id;
-        }
-
-        $targetSkill->update($updates);
-
-        if (
-            $linkedAutoSkill &&
-            $existingWantedSkill &&
-            (int) $linkedAutoSkill->id !== (int) $existingWantedSkill->id
-        ) {
-            $linkedAutoSkill->delete();
-        }
-    }
-
-    private function cleanupLinkedAutoExchangeSkill(Skill $exchangeSkill): void
-    {
-        Skill::query()
-            ->where('user_id', $exchangeSkill->user_id)
-            ->where('exchange_parent_skill_id', $exchangeSkill->id)
-            ->where('auto_created_from_exchange', true)
-            ->delete();
-    }
-
+    /**
+     * Handle skill payload.
+     */
     private function skillPayload(Request $request): array
     {
         $validated = $request->validate([
@@ -99,7 +34,7 @@ class SkillController extends Controller
             'description' => 'nullable|string|max:1000',
             'category' => [
                 'required',
-                Rule::in(['Academic', 'Programming', 'Sports', 'Music', 'Public Speaking', 'Design', 'Other']),
+                Rule::in($this->categories),
             ],
             'skill_type' => [
                 'required',
@@ -119,18 +54,53 @@ class SkillController extends Controller
             'availability' => 'nullable|string|max:255',
             'exchange_skill_needed' => 'nullable|string|max:255|required_if:skill_type,exchange',
             'collaboration_goal' => 'nullable|string|max:255',
+            'status' => ['nullable', Rule::in([Skill::STATUS_ACTIVE, Skill::STATUS_INACTIVE])],
         ]);
 
         $validated['skill_type'] = Skill::normalizedType($validated['skill_type']);
+        $validated['status'] = $validated['status'] ?? Skill::STATUS_ACTIVE;
+
+        if ($validated['skill_type'] !== Skill::TYPE_EXCHANGE) {
+            $validated['exchange_skill_needed'] = null;
+        }
 
         return $validated;
     }
 
+    /**
+     * Handle is duplicate exchange.
+     */
+    private function isDuplicateExchange(array $validated, ?int $ignoreId = null): bool
+    {
+        if ($validated['skill_type'] !== Skill::TYPE_EXCHANGE) {
+            return false;
+        }
+
+        $query = Skill::query()
+            ->where('user_id', Auth::id())
+            ->where('skill_type', Skill::TYPE_EXCHANGE)
+            ->whereRaw('LOWER(TRIM(skill_name)) = ?', [Str::lower(trim((string) $validated['skill_name']))])
+            ->whereRaw('LOWER(TRIM(exchange_skill_needed)) = ?', [Str::lower(trim((string) ($validated['exchange_skill_needed'] ?? '')))]);
+
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Handle index.
+     */
     public function index()
     {
-        $skills = Skill::with('user')
+        $skills = Skill::with('user.profile')
             ->whereHas('user', function ($query) {
                 $query->where('status', 'active');
+            })
+            ->where(function ($query) {
+                $query->where('status', Skill::STATUS_ACTIVE)
+                    ->orWhere('user_id', Auth::id());
             })
             ->latest()
             ->get();
@@ -138,30 +108,41 @@ class SkillController extends Controller
         return view('skills.index', compact('skills'));
     }
 
+    /**
+     * Handle store.
+     */
     public function store(Request $request)
     {
         $validated = $this->skillPayload($request);
 
-        DB::transaction(function () use ($validated) {
-            $skill = Skill::create([
-                'user_id' => Auth::id(),
-                'skill_name' => $validated['skill_name'],
-                'description' => $validated['description'] ?? null,
-                'category' => $validated['category'],
-                'skill_type' => $validated['skill_type'],
-                'skill_level' => $validated['skill_level'],
-                'availability' => $validated['availability'] ?? null,
-                'exchange_skill_needed' => $validated['exchange_skill_needed'] ?? null,
-                'collaboration_goal' => $validated['collaboration_goal'] ?? null,
-            ]);
+        if ($this->isDuplicateExchange($validated)) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'skill_name' => 'You already created this exchange skill with the same offered and wanted skill.',
+                ]);
+        }
 
-            $this->syncExchangeWantedSkill($skill);
-        });
+        Skill::create([
+            'user_id' => Auth::id(),
+            'skill_name' => $validated['skill_name'],
+            'description' => $validated['description'] ?? null,
+            'category' => $validated['category'],
+            'skill_type' => $validated['skill_type'],
+            'skill_level' => $validated['skill_level'],
+            'availability' => $validated['availability'] ?? null,
+            'exchange_skill_needed' => $validated['exchange_skill_needed'] ?? null,
+            'collaboration_goal' => $validated['collaboration_goal'] ?? null,
+            'status' => $validated['status'],
+        ]);
 
         return redirect()->route('skills.index')
             ->with('success', 'Skill shared successfully.');
     }
 
+    /**
+     * Handle edit.
+     */
     public function edit(Skill $skill)
     {
         abort_unless((int) $skill->user_id === (int) Auth::id(), 403);
@@ -169,48 +150,68 @@ class SkillController extends Controller
         return view('skills.edit', compact('skill'));
     }
 
+    /**
+     * Handle update.
+     */
     public function update(Request $request, Skill $skill)
     {
         abort_unless((int) $skill->user_id === (int) Auth::id(), 403);
 
         $validated = $this->skillPayload($request);
 
-        DB::transaction(function () use ($skill, $validated) {
-            $skill->update($validated);
-            $skill->refresh();
+        if ($this->isDuplicateExchange($validated, $skill->id)) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'skill_name' => 'You already have this exchange pair in another skill.',
+                ]);
+        }
 
-            if (
-                $skill->normalized_type === Skill::TYPE_EXCHANGE &&
-                !empty(trim((string) $skill->exchange_skill_needed))
-            ) {
-                $this->syncExchangeWantedSkill($skill);
-
-                return;
-            }
-
-            $this->cleanupLinkedAutoExchangeSkill($skill);
-        });
+        $skill->update($validated);
 
         return redirect()->route('skills.index')
             ->with('success', 'Skill updated successfully.');
     }
 
+    /**
+     * Handle toggle status.
+     */
+    public function toggleStatus(Skill $skill)
+    {
+        abort_unless((int) $skill->user_id === (int) Auth::id(), 403);
+
+        $skill->update([
+            'status' => $skill->isActive() ? Skill::STATUS_INACTIVE : Skill::STATUS_ACTIVE,
+        ]);
+
+        return redirect()->route('skills.index')
+            ->with('success', 'Skill status updated.');
+    }
+
+    /**
+     * Handle destroy.
+     */
     public function destroy(Skill $skill)
     {
         abort_unless((int) $skill->user_id === (int) Auth::id(), 403);
 
-        DB::transaction(function () use ($skill) {
-            $this->cleanupLinkedAutoExchangeSkill($skill);
-            $skill->delete();
-        });
+        $skill->delete();
 
         return redirect()->route('skills.index')
             ->with('success', 'Skill deleted successfully.');
     }
 
+    /**
+     * Handle matches.
+     */
     public function matches(Request $request, Skill $skill)
     {
         abort_unless((int) $skill->user_id === (int) Auth::id(), 403);
+
+        if (!$skill->isActive()) {
+            return redirect()->route('skills.index')
+                ->with('error', 'Inactive skills cannot be used for public matching.');
+        }
 
         $sourceType = $skill->normalized_type;
 
@@ -232,6 +233,7 @@ class SkillController extends Controller
         $query = Skill::with('user')
             ->where('id', '!=', $skill->id)
             ->where('user_id', '!=', Auth::id())
+            ->where('status', Skill::STATUS_ACTIVE)
             ->whereHas('user', fn ($builder) => $builder->active());
 
         if ($filters['category'] !== '') {

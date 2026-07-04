@@ -7,6 +7,9 @@ use App\Models\GroupMember;
 
 class GroupInvitationController extends Controller
 {
+    /**
+     * Handle accept.
+     */
     public function accept(GroupInvitation $invitation)
     {
         if ($invitation->receiver_id !== auth()->id()) {
@@ -31,6 +34,9 @@ class GroupInvitationController extends Controller
         );
     }
 
+    /**
+     * Handle decline.
+     */
     public function decline(GroupInvitation $invitation)
     {
         if ($invitation->receiver_id !== auth()->id()) {

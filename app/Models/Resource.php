@@ -15,6 +15,9 @@ class Resource extends Model
         'resource_link',
     ];
 
+    /**
+     * Handle user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

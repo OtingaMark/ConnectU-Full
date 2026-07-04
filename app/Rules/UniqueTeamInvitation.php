@@ -10,6 +10,9 @@ use Illuminate\Translation\PotentiallyTranslatedString;
 
 class UniqueTeamInvitation implements ValidationRule
 {
+    /**
+     * Initialize class dependencies.
+     */
     public function __construct(protected Team $team)
     {
         //

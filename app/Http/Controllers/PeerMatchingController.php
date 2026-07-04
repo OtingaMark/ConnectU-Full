@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 
 class PeerMatchingController extends Controller
 {
+    /**
+     * Handle index.
+     */
     public function index()
     {
         $myProfile = Auth::user()->profile;
@@ -119,6 +122,9 @@ class PeerMatchingController extends Controller
         );
     }
 
+    /**
+     * Handle split words.
+     */
     private function splitWords($value)
     {
         if (!$value) {

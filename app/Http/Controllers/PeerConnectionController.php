@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 
 class PeerConnectionController extends Controller
 {
+    /**
+     * Handle accept.
+     */
     public function accept(PeerConnection $connection)
     {
         $connection->update([
@@ -20,6 +23,9 @@ class PeerConnectionController extends Controller
         );
     }
 
+    /**
+     * Handle decline.
+     */
     public function decline(PeerConnection $connection)
     {
         $connection->update([
@@ -31,6 +37,9 @@ class PeerConnectionController extends Controller
             'Connection declined.'
         );
     }
+    /**
+     * Handle send.
+     */
     public function send($userId)
 {
     $targetUser = User::active()->findOrFail($userId);

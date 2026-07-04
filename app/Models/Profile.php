@@ -17,6 +17,9 @@ class Profile extends Model
         'profile_picture',
     ];
 
+    /**
+     * Handle user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

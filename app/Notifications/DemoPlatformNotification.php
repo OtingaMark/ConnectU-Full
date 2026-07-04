@@ -9,6 +9,9 @@ class DemoPlatformNotification extends Notification
 {
     use Queueable;
 
+    /**
+     * Initialize class dependencies.
+     */
     public function __construct(
         private readonly string $eventType,
         private readonly string $title,
@@ -17,11 +20,17 @@ class DemoPlatformNotification extends Notification
     ) {
     }
 
+    /**
+     * Handle via.
+     */
     public function via(object $notifiable): array
     {
         return ['database'];
     }
 
+    /**
+     * Handle to array.
+     */
     public function toArray(object $notifiable): array
     {
         return [

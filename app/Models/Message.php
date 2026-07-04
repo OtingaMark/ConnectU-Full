@@ -16,16 +16,25 @@ class Message extends Model
     'is_read',
 ];
 
+    /**
+     * Handle sender.
+     */
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
     }
 
+    /**
+     * Handle receiver.
+     */
     public function receiver()
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
 
+    /**
+     * Handle reports.
+     */
     public function reports()
     {
         return $this->hasMany(Report::class, 'direct_message_id');

@@ -26,41 +26,65 @@ class Report extends Model
         'reviewed_at' => 'datetime',
     ];
 
+    /**
+     * Handle reporter.
+     */
     public function reporter()
     {
         return $this->belongsTo(User::class, 'reporter_id');
     }
 
+    /**
+     * Handle reported user.
+     */
     public function reportedUser()
     {
         return $this->belongsTo(User::class, 'reported_user_id');
     }
 
+    /**
+     * Handle study group.
+     */
     public function studyGroup()
     {
         return $this->belongsTo(StudyGroup::class);
     }
 
+    /**
+     * Handle group message.
+     */
     public function groupMessage()
     {
         return $this->belongsTo(GroupMessage::class);
     }
 
+    /**
+     * Handle direct message.
+     */
     public function directMessage()
     {
         return $this->belongsTo(Message::class, 'direct_message_id');
     }
 
+    /**
+     * Handle feedback.
+     */
     public function feedback()
     {
         return $this->belongsTo(Feedback::class);
     }
 
+    /**
+     * Handle skill.
+     */
     public function skill()
     {
         return $this->belongsTo(Skill::class);
     }
 
+    /**
+     * Handle reviewer.
+     */
     public function reviewer()
     {
         return $this->belongsTo(User::class, 'reviewed_by');

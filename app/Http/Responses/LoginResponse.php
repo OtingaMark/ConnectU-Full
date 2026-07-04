@@ -10,6 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class LoginResponse implements LoginResponseContract
 {
+    /**
+     * Handle to response.
+     */
     public function toResponse($request): Response
     {
         $user = $request->user();

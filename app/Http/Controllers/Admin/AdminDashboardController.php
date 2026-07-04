@@ -16,6 +16,9 @@ use Illuminate\Http\Request;
 
 class AdminDashboardController extends Controller
 {
+    /**
+     * Handle ensure admin.
+     */
     private function ensureAdmin(): void
     {
         abort_unless(
@@ -24,6 +27,9 @@ class AdminDashboardController extends Controller
         );
     }
 
+    /**
+     * Handle index.
+     */
     public function index()
     {
         $this->ensureAdmin();
@@ -37,6 +43,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle users.
+     */
     public function users()
     {
         $this->ensureAdmin();
@@ -46,6 +55,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle edit user.
+     */
     public function editUser(User $user)
     {
         $this->ensureAdmin();
@@ -55,6 +67,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle groups.
+     */
     public function groups()
     {
         $this->ensureAdmin();
@@ -64,6 +79,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle edit group.
+     */
     public function editGroup(StudyGroup $studyGroup)
     {
         $this->ensureAdmin();
@@ -73,6 +91,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle update group.
+     */
     public function updateGroup(Request $request, StudyGroup $studyGroup)
     {
         $this->ensureAdmin();
@@ -96,6 +117,9 @@ class AdminDashboardController extends Controller
         return redirect()->route('admin.groups.index')->with('success', 'Study group updated successfully.');
     }
 
+    /**
+     * Handle skills.
+     */
     public function skills()
     {
         $this->ensureAdmin();
@@ -105,6 +129,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle feedback.
+     */
     public function feedback()
     {
         $this->ensureAdmin();
@@ -114,6 +141,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle reports.
+     */
     public function reports()
     {
         $this->ensureAdmin();
@@ -169,6 +199,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle generate report.
+     */
     public function generateReport()
     {
         $this->ensureAdmin();
@@ -192,6 +225,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle analytics.
+     */
     public function analytics()
     {
         $this->ensureAdmin();
@@ -205,6 +241,9 @@ class AdminDashboardController extends Controller
         ]);
     }
 
+    /**
+     * Handle change role.
+     */
     public function changeRole(User $user)
     {
         $this->ensureAdmin();
@@ -223,6 +262,9 @@ class AdminDashboardController extends Controller
         return back()->with('success','Role updated.');
     }
 
+    /**
+     * Handle update user.
+     */
     public function updateUser(Request $request, User $user)
     {
         $this->ensureAdmin();
@@ -255,6 +297,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'User updated successfully.');
     }
 
+    /**
+     * Handle suspend user.
+     */
     public function suspendUser(User $user)
     {
         $this->ensureAdmin();
@@ -290,6 +335,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'User suspended successfully.');
     }
 
+    /**
+     * Handle review report.
+     */
     public function reviewReport(Request $request, Report $report)
     {
         $this->ensureAdmin();
@@ -312,6 +360,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Report marked as reviewed.');
     }
 
+    /**
+     * Handle resolve report.
+     */
     public function resolveReport(Request $request, Report $report)
     {
         $this->ensureAdmin();
@@ -334,6 +385,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Report resolved.');
     }
 
+    /**
+     * Handle reject report.
+     */
     public function rejectReport(Request $request, Report $report)
     {
         $this->ensureAdmin();
@@ -356,6 +410,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Report rejected.');
     }
 
+    /**
+     * Handle suspend reported user.
+     */
     public function suspendReportedUser(Request $request, Report $report)
     {
         $this->ensureAdmin();
@@ -398,6 +455,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Reported user suspended successfully.');
     }
 
+    /**
+     * Handle suspend reported group.
+     */
     public function suspendReportedGroup(Request $request, Report $report)
     {
         $this->ensureAdmin();
@@ -432,6 +492,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Reported group suspended successfully.');
     }
 
+    /**
+     * Handle delete reported content.
+     */
     public function deleteReportedContent(Report $report)
     {
         $this->ensureAdmin();
@@ -473,6 +536,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Reported content deleted and report resolved.');
     }
 
+    /**
+     * Handle approve appeal.
+     */
     public function approveAppeal(Request $request, SuspensionAppeal $appeal)
     {
         $this->ensureAdmin();
@@ -497,6 +563,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Appeal approved and user reactivated.');
     }
 
+    /**
+     * Handle reject appeal.
+     */
     public function rejectAppeal(Request $request, SuspensionAppeal $appeal)
     {
         $this->ensureAdmin();
@@ -515,6 +584,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Appeal rejected.');
     }
 
+    /**
+     * Handle approve group appeal.
+     */
     public function approveGroupAppeal(Request $request, GroupSuspensionAppeal $appeal)
     {
         $this->ensureAdmin();
@@ -539,6 +611,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Group appeal approved and group reactivated.');
     }
 
+    /**
+     * Handle reject group appeal.
+     */
     public function rejectGroupAppeal(Request $request, GroupSuspensionAppeal $appeal)
     {
         $this->ensureAdmin();
@@ -557,6 +632,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Group appeal rejected.');
     }
 
+    /**
+     * Handle resolve reported user.
+     */
     private function resolveReportedUser(Report $report): ?User
     {
         if ($report->reportedUser) {
@@ -586,11 +664,17 @@ class AdminDashboardController extends Controller
         return null;
     }
 
+    /**
+     * Handle is report completed.
+     */
     private function isReportCompleted(Report $report): bool
     {
         return in_array($report->status, ['resolved', 'rejected'], true);
     }
 
+    /**
+     * Handle delete user.
+     */
     public function deleteUser(User $user)
     {
         $this->ensureAdmin();
@@ -614,6 +698,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'User deleted successfully.');
     }
 
+    /**
+     * Handle delete group.
+     */
     public function deleteGroup(StudyGroup $studyGroup)
     {
         $this->ensureAdmin();
@@ -623,6 +710,9 @@ class AdminDashboardController extends Controller
         return back()->with('success', 'Study group deleted successfully.');
     }
 
+    /**
+     * Handle delete skill.
+     */
     public function deleteSkill(Skill $skill)
     {
         $this->ensureAdmin();

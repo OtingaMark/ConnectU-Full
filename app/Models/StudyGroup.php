@@ -31,41 +31,65 @@ class StudyGroup extends Model
         'suspended_at' => 'datetime',
     ];
 
+    /**
+     * Handle is suspended.
+     */
     public function isSuspended(): bool
     {
         return strtolower(trim($this->status ?? 'active')) === 'suspended';
     }
 
+    /**
+     * Handle user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Handle members.
+     */
     public function members()
     {
         return $this->hasMany(GroupMember::class);
     }
 
+    /**
+     * Handle invitations.
+     */
     public function invitations()
     {
         return $this->hasMany(GroupInvitation::class);
     }
 
+    /**
+     * Handle messages.
+     */
     public function messages()
     {
         return $this->hasMany(GroupMessage::class);
     }
 
+    /**
+     * Handle join requests.
+     */
     public function joinRequests()
     {
         return $this->hasMany(GroupJoinRequest::class);
     }
 
+    /**
+     * Handle reports.
+     */
     public function reports()
     {
         return $this->hasMany(Report::class);
     }
 
+    /**
+     * Handle suspension appeals.
+     */
     public function suspensionAppeals()
     {
         return $this->hasMany(GroupSuspensionAppeal::class);

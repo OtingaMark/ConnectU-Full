@@ -13,6 +13,8 @@ class Skill extends Model
     public const TYPE_WANT_TO_LEARN = 'want_to_learn';
     public const TYPE_EXCHANGE = 'exchange';
     public const TYPE_TEAMWORK = 'teamwork';
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
 
     protected $fillable = [
         'user_id',
@@ -24,6 +26,7 @@ class Skill extends Model
         'availability',
         'exchange_skill_needed',
         'collaboration_goal',
+        'status',
         'auto_created_from_exchange',
         'exchange_parent_skill_id',
     ];
@@ -39,11 +42,25 @@ class Skill extends Model
         };
     }
 
+    /**
+     * Handle get normalized type attribute.
+     */
     public function getNormalizedTypeAttribute(): string
     {
         return self::normalizedType($this->skill_type);
     }
 
+    /**
+     * Handle is active.
+     */
+    public function isActive(): bool
+    {
+        return strtolower(trim((string) $this->status)) === self::STATUS_ACTIVE;
+    }
+
+    /**
+     * Handle user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

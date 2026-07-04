@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 
 class ResourceController extends Controller
 {
+    /**
+     * Handle index.
+     */
     public function index()
     {
         $resources = Resource::with('user')
@@ -17,6 +20,9 @@ class ResourceController extends Controller
         return view('resources.index', compact('resources'));
     }
 
+    /**
+     * Handle store.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([

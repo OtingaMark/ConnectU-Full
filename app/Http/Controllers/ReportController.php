@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    /**
+     * Handle store.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([

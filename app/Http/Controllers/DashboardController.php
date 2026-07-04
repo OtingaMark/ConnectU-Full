@@ -10,6 +10,9 @@ use App\Models\PeerConnection;
 
 class DashboardController extends Controller
 {
+    /**
+     * Handle index.
+     */
     public function index()
     {
         $studyGroupsCount = StudyGroup::count();

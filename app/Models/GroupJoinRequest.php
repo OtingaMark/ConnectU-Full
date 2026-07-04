@@ -12,11 +12,17 @@ class GroupJoinRequest extends Model
         'status',
     ];
 
+    /**
+     * Handle study group.
+     */
     public function studyGroup()
     {
         return $this->belongsTo(StudyGroup::class);
     }
 
+    /**
+     * Handle user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

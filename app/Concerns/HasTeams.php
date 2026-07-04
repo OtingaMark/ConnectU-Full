@@ -178,6 +178,9 @@ trait HasTeams
         );
     }
 
+    /**
+     * Handle fallback team.
+     */
     public function fallbackTeam(?Team $excluding = null): ?Team
     {
         return $this->teams()

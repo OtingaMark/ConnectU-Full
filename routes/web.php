@@ -173,6 +173,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
     Route::get('/skills/{skill}/edit', [SkillController::class, 'edit'])->name('skills.edit');
     Route::patch('/skills/{skill}', [SkillController::class, 'update'])->name('skills.update');
+    Route::patch('/skills/{skill}/toggle-status', [SkillController::class, 'toggleStatus'])->name('skills.toggle-status');
     Route::delete('/skills/{skill}', [SkillController::class, 'destroy'])->name('skills.destroy');
     Route::get('/skills/{skill}/matches', [SkillController::class, 'matches'])->name('skills.matches');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');

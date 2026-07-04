@@ -20,11 +20,17 @@ class SuspensionAppeal extends Model
         'reviewed_at' => 'datetime',
     ];
 
+    /**
+     * Handle user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Handle reviewer.
+     */
     public function reviewer()
     {
         return $this->belongsTo(User::class, 'reviewed_by');

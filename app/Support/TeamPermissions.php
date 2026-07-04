@@ -4,6 +4,9 @@ namespace App\Support;
 
 readonly class TeamPermissions
 {
+    /**
+     * Initialize class dependencies.
+     */
     public function __construct(
         public bool $canUpdateTeam,
         public bool $canDeleteTeam,

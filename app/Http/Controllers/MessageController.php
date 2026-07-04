@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StudyGroup;
 use App\Models\Message;
 use App\Models\PeerConnection;
 use App\Models\User;
@@ -9,14 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use App\Models\StudyGroup;
 
 class MessageController extends Controller
 {
+    /**
+     * Handle index.
+     */
     public function index()
     {
         $currentUserId = Auth::id();
         $draftMessage = trim((string) request('draft', ''));
+        $messageMode = trim((string) request('mode', ''));
 
         $myGroups = StudyGroup::with(['messages.user', 'members'])
             ->where('status', 'active')
@@ -125,6 +129,28 @@ class MessageController extends Controller
                 ->update(['is_read' => true]);
         }
 
+        $remainingFreeMessages = null;
+
+        if ($activeUserId) {
+            $connection = PeerConnection::where(function ($query) use ($activeUserId, $currentUserId) {
+                $query->where('requester_id', $currentUserId)
+                    ->where('receiver_id', $activeUserId);
+            })->orWhere(function ($query) use ($activeUserId, $currentUserId) {
+                $query->where('requester_id', $activeUserId)
+                    ->where('receiver_id', $currentUserId);
+            })->latest('id')->first();
+
+            $isConnected = $connection && $connection->status === 'accepted';
+
+            if (!$isConnected) {
+                $sentCount = Message::where('sender_id', $currentUserId)
+                    ->where('receiver_id', $activeUserId)
+                    ->count();
+
+                $remainingFreeMessages = max(0, 3 - $sentCount);
+            }
+        }
+
         return view('messages.index', compact(
             'chatUsers',
             'receivedMessages',
@@ -135,19 +161,27 @@ class MessageController extends Controller
             'activeGroupId',
             'activeGroup',
             'groupMessages',
-            'draftMessage'
+            'draftMessage',
+            'messageMode',
+            'remainingFreeMessages'
         ));
     }
 
+    /**
+     * Handle store.
+     */
     public function store(Request $request)
     {
+        $currentUserId = Auth::id();
+        $messageMode = trim((string) $request->input('mode', ''));
+
         $validated = $request->validate([
             'receiver_id' => [
                 'required',
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->where('status', 'active');
                 }),
-                Rule::notIn([Auth::id()]),
+                Rule::notIn([$currentUserId]),
             ],
             'message' => 'nullable|string|max:1000',
             'message_file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,txt,jpg,jpeg,png|max:20480',
@@ -162,40 +196,38 @@ class MessageController extends Controller
             empty($validated['resource_link'])
         ) {
             return redirect()
-                ->route('messages.index', ['user' => $receiverId])
+                ->route('messages.index', ['user' => $receiverId, 'mode' => $messageMode ?: null])
                 ->with('error', 'Please type a message, attach a file, or add a link.');
         }
 
-        $connection = PeerConnection::where(function ($query) use ($receiverId) {
-            $query->where('requester_id', Auth::id())
+        $connection = PeerConnection::where(function ($query) use ($receiverId, $currentUserId) {
+            $query->where('requester_id', $currentUserId)
                 ->where('receiver_id', $receiverId);
-        })->orWhere(function ($query) use ($receiverId) {
+        })->orWhere(function ($query) use ($receiverId, $currentUserId) {
             $query->where('requester_id', $receiverId)
-                ->where('receiver_id', Auth::id());
-        })->first();
+                ->where('receiver_id', $currentUserId);
+        })->latest('id')->first();
 
-        if (!$connection) {
-            $sentCount = Message::where('sender_id', Auth::id())
+        $isConnected = $connection && $connection->status === 'accepted';
+
+        if (!$isConnected) {
+            $sentCount = Message::where('sender_id', $currentUserId)
                 ->where('receiver_id', $receiverId)
                 ->count();
 
             if ($sentCount >= 3) {
                 return redirect()
-                    ->route('messages.index', ['user' => $receiverId])
-                    ->with('error', 'You have reached the 3-message limit. Wait for the user to accept your connection request.');
+                    ->route('messages.index', ['user' => $receiverId, 'mode' => $messageMode ?: null])
+                    ->with('error', 'You can only send up to 3 messages until this user accepts your connection request.');
             }
 
-            if ($sentCount == 2) {
-                PeerConnection::create([
-                    'requester_id' => Auth::id(),
+            if (!$connection) {
+                $connection = PeerConnection::create([
+                    'requester_id' => $currentUserId,
                     'receiver_id' => $receiverId,
                     'status' => 'pending',
                 ]);
             }
-        } elseif ($connection->status !== 'accepted') {
-            return redirect()
-                ->route('messages.index', ['user' => $receiverId])
-                ->with('error', 'Your connection request is still pending. Wait for the user to accept before continuing.');
         }
 
         $filePath = null;
@@ -211,7 +243,7 @@ class MessageController extends Controller
         }
 
         Message::create([
-            'sender_id' => Auth::id(),
+            'sender_id' => $currentUserId,
             'receiver_id' => $receiverId,
             'message' => $validated['message'] ?? '',
             'file_path' => $filePath,
@@ -221,10 +253,13 @@ class MessageController extends Controller
         ]);
 
         return redirect()
-            ->route('messages.index', ['user' => $receiverId])
+            ->route('messages.index', ['user' => $receiverId, 'mode' => $messageMode ?: null])
             ->with('success', 'Message sent successfully.');
     }
 
+    /**
+     * Handle attachment.
+     */
     public function attachment(Message $message)
     {
         if ($message->sender_id !== Auth::id() && $message->receiver_id !== Auth::id()) {
@@ -238,6 +273,9 @@ class MessageController extends Controller
         return response()->file(storage_path('app/public/' . $message->file_path));
     }
 
+    /**
+     * Handle get my groups.
+     */
     public function getMyGroups()
     {
         $myGroups = StudyGroup::whereHas('members', function ($q) {
@@ -247,6 +285,9 @@ class MessageController extends Controller
         return $myGroups;
     }
 
+    /**
+     * Handle group chat.
+     */
     public function groupChat(
         StudyGroup $studyGroup
     )

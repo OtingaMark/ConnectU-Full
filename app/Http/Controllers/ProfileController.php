@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
+    /**
+     * Handle edit.
+     */
     public function edit()
     {
         $profile = Auth::user()->profile;
@@ -18,6 +21,9 @@ class ProfileController extends Controller
         return view('profile.edit', compact('profile'));
     }
 
+    /**
+     * Handle update.
+     */
     public function update(Request $request)
     {
         $profile = Auth::user()->profile;
@@ -48,6 +54,9 @@ class ProfileController extends Controller
         return redirect()->route('profile.edit')->with('success', 'Profile updated successfully.');
     }
 
+    /**
+     * Handle show.
+     */
     public function show(User $user)
     {
         $isAdminViewer = strtolower(trim(auth()->user()->role ?? '')) === 'admin';

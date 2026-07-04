@@ -6,11 +6,17 @@ use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
+    /**
+     * Handle edit.
+     */
     public function edit()
     {
         return view('settings.edit');
     }
 
+    /**
+     * Handle update.
+     */
     public function update(Request $request)
     {
         $validated = $request->validate([

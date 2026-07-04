@@ -41,6 +41,14 @@
                     </select>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Status</label>
+                    <select name="status" required class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white">
+                        <option value="active" @selected(strtolower((string) old('status', $skill->status ?? 'active')) === 'active')>Active</option>
+                        <option value="inactive" @selected(strtolower((string) old('status', $skill->status ?? 'active')) === 'inactive')>Inactive</option>
+                    </select>
+                </div>
+
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Availability</label>
                     <input type="text" name="availability" value="{{ old('availability', $skill->availability) }}"

@@ -15,16 +15,25 @@ class GroupMessage extends Model
         'message_type',
     ];
 
+    /**
+     * Handle study group.
+     */
     public function studyGroup()
     {
         return $this->belongsTo(StudyGroup::class);
     }
 
+    /**
+     * Handle user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Handle reports.
+     */
     public function reports()
     {
         return $this->hasMany(Report::class);

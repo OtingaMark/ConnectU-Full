@@ -3,6 +3,7 @@
     @php
         $allSkills = $skills ?? collect();
         $mySkills = $allSkills->where('user_id', auth()->id())->values();
+        $activeSkills = $allSkills->filter(fn ($skill) => strtolower((string) ($skill->status ?? 'active')) === 'active')->values();
 
         $normalizedType = function ($skill) {
             return \App\Models\Skill::normalizedType($skill->skill_type ?? null);
@@ -13,25 +14,46 @@
         };
 
         $isTeaching = function ($skill) {
-            return \App\Models\Skill::normalizedType($skill->skill_type ?? null) === \App\Models\Skill::TYPE_CAN_TEACH;
+            return in_array(
+                \App\Models\Skill::normalizedType($skill->skill_type ?? null),
+                [\App\Models\Skill::TYPE_CAN_TEACH, \App\Models\Skill::TYPE_EXCHANGE],
+                true
+            );
         };
 
         $myLearningSkills = $mySkills->filter($isLearning)->values();
         $myTeachingSkills = $mySkills->filter($isTeaching)->values();
 
-        $exchangeNeededSkills = $mySkills
-            ->filter(fn ($skill) => $normalizedType($skill) === \App\Models\Skill::TYPE_EXCHANGE)
-            ->pluck('exchange_skill_needed')
-            ->map(fn ($name) => trim((string) $name))
-            ->filter()
-            ->values();
+        $myLearningEntries = collect();
 
-        $myLearningSkillNames = $myLearningSkills
-            ->pluck('skill_name')
-            ->map(fn ($name) => trim((string) $name))
-            ->merge($exchangeNeededSkills)
-            ->filter()
-            ->unique(fn ($name) => strtolower($name))
+        foreach ($mySkills as $skill) {
+            $type = $normalizedType($skill);
+            $status = strtolower((string) ($skill->status ?? 'active'));
+
+            if ($type === \App\Models\Skill::TYPE_WANT_TO_LEARN) {
+                $myLearningEntries->push([
+                    'name' => trim((string) $skill->skill_name),
+                    'status' => $status,
+                ]);
+            }
+
+            if ($type === \App\Models\Skill::TYPE_EXCHANGE && !empty(trim((string) $skill->exchange_skill_needed))) {
+                $myLearningEntries->push([
+                    'name' => trim((string) $skill->exchange_skill_needed),
+                    'status' => $status,
+                ]);
+            }
+        }
+
+        $myLearningEntries = $myLearningEntries
+            ->filter(fn ($item) => !empty($item['name']))
+            ->groupBy(fn ($item) => strtolower($item['name']))
+            ->map(function ($items) {
+                return [
+                    'name' => $items->first()['name'],
+                    'status' => $items->contains(fn ($entry) => $entry['status'] === 'active') ? 'active' : 'inactive',
+                ];
+            })
             ->values();
 
         $requestsReceived = 0;
@@ -86,7 +108,7 @@
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow">
                 <p class="text-sm text-gray-500 dark:text-gray-300">Skills I'm Learning</p>
-                <p class="text-3xl font-bold text-indigo-700 dark:text-indigo-400">{{ $myLearningSkills->count() }}</p>
+                <p class="text-3xl font-bold text-indigo-700 dark:text-indigo-400">{{ $myLearningEntries->count() }}</p>
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow">
                 <p class="text-sm text-gray-500 dark:text-gray-300">Skills I Can Teach</p>
@@ -147,6 +169,12 @@
                        placeholder="Description"
                        class="xl:col-span-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
 
+                <select name="status"
+                        class="xl:col-span-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
+                    <option value="active" @selected(old('status', 'active') === 'active')>Active</option>
+                    <option value="inactive" @selected(old('status') === 'inactive')>Inactive</option>
+                </select>
+
                   <input type="text" name="exchange_skill_needed" value="{{ old('exchange_skill_needed') }}"
                       placeholder="Exchange skill needed (optional)"
                       class="xl:col-span-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
@@ -205,14 +233,51 @@
                     @foreach($allSkills as $skill)
                         @php
                             $nameKey = strtolower(trim($skill->skill_name));
-                            $offerCount = $allSkills->where('skill_name', $skill->skill_name)->count();
-                            $learnCount = $allSkills->filter(function ($s) use ($nameKey) {
-                                return strtolower(trim($s->skill_name)) === $nameKey
-                                    && \App\Models\Skill::normalizedType($s->skill_type ?? null) === \App\Models\Skill::TYPE_WANT_TO_LEARN;
-                            })->count();
-
                             $category = $skill->category ?? 'Other';
                             $skillType = $normalizedType($skill);
+                            $skillStatus = strtolower((string) ($skill->status ?? 'active'));
+                            $isInactive = $skillStatus !== 'active';
+
+                            $offerCount = $activeSkills->filter(function ($s) use ($nameKey) {
+                                $type = \App\Models\Skill::normalizedType($s->skill_type ?? null);
+
+                                return strtolower(trim((string) $s->skill_name)) === $nameKey
+                                    && in_array($type, [\App\Models\Skill::TYPE_CAN_TEACH, \App\Models\Skill::TYPE_EXCHANGE], true);
+                            })->count();
+
+                                    $teamworkCount = $activeSkills->filter(function ($s) use ($nameKey) {
+                                    $type = \App\Models\Skill::normalizedType($s->skill_type ?? null);
+
+                                    return $type === \App\Models\Skill::TYPE_TEAMWORK
+                                        && strtolower(trim((string) $s->skill_name)) === $nameKey;
+                                    })->count();
+
+                            $wantedLookup = $skillType === \App\Models\Skill::TYPE_EXCHANGE
+                                ? strtolower(trim((string) ($skill->exchange_skill_needed ?? '')))
+                                : $nameKey;
+
+                            $learnCount = $activeSkills->filter(function ($s) use ($wantedLookup) {
+                                if ($wantedLookup === '') {
+                                    return false;
+                                }
+
+                                $type = \App\Models\Skill::normalizedType($s->skill_type ?? null);
+
+                                if ($type === \App\Models\Skill::TYPE_WANT_TO_LEARN) {
+                                    return strtolower(trim((string) $s->skill_name)) === $wantedLookup;
+                                }
+
+                                if ($type === \App\Models\Skill::TYPE_EXCHANGE) {
+                                    return strtolower(trim((string) ($s->exchange_skill_needed ?? ''))) === $wantedLookup;
+                                }
+
+                                return false;
+                            })->count();
+
+                            if ($skillType === \App\Models\Skill::TYPE_TEAMWORK) {
+                                $offerCount = max(1, $teamworkCount);
+                                $learnCount = max(1, $teamworkCount);
+                            }
 
                             $isMine = (int) $skill->user_id === (int) auth()->id();
 
@@ -229,6 +294,17 @@
                                 \App\Models\Skill::TYPE_TEAMWORK => 'Teamwork',
                                 default => 'Can teach',
                             };
+
+                            $exchangeSentence = $skillType === \App\Models\Skill::TYPE_EXCHANGE
+                                ? (($skill->user->name ?? 'This user') . ' teaches ' . $skill->skill_name . ' in exchange for ' . ($skill->exchange_skill_needed ?: 'another skill') . '.')
+                                : null;
+
+                            $teamworkSentence = $skillType === \App\Models\Skill::TYPE_TEAMWORK
+                                ? (($skill->user->name ?? 'This user') . ' is looking for people to team up with on ' . $skill->skill_name . '.')
+                                : null;
+
+                            $offerLabel = $skillType === \App\Models\Skill::TYPE_TEAMWORK ? 'Team Ups' : 'Offering';
+                            $learnLabel = $skillType === \App\Models\Skill::TYPE_TEAMWORK ? 'People Seeking Teamwork' : 'Want to Learn';
                         @endphp
 
                         <article class="skill-card bg-white dark:bg-gray-800 rounded-2xl shadow p-5 hover:shadow-xl hover:-translate-y-0.5 transition min-h-[300px] flex flex-col"
@@ -260,9 +336,14 @@
                                     </div>
                                 </div>
 
-                                @if($isMine)
-                                    <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">My Skill</span>
-                                @endif
+                                <div class="flex flex-col items-end gap-1">
+                                    @if($isMine)
+                                        <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">My Skill</span>
+                                    @endif
+                                    <span class="px-2 py-1 rounded-full text-xs {{ $isInactive ? 'bg-gray-200 text-gray-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                        {{ $isInactive ? 'Inactive' : 'Active' }}
+                                    </span>
+                                </div>
                             </div>
 
                             <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1">
@@ -270,38 +351,55 @@
                             </p>
 
                             @if($skillType === \App\Models\Skill::TYPE_EXCHANGE && !empty($skill->exchange_skill_needed))
-                                <p class="text-xs text-indigo-700 dark:text-indigo-300 mb-2">Exchange: {{ $skill->skill_name }} for {{ $skill->exchange_skill_needed }}</p>
+                                <p class="text-xs text-indigo-700 dark:text-indigo-300 mb-2">Offering: {{ $skill->skill_name }}</p>
+                                <p class="text-xs text-indigo-700 dark:text-indigo-300 mb-2">Wants to Learn: {{ $skill->exchange_skill_needed }}</p>
+                                <p class="text-xs text-indigo-700 dark:text-indigo-300 mb-2">{{ $exchangeSentence }}</p>
                             @endif
 
                             @if($skillType === \App\Models\Skill::TYPE_TEAMWORK && !empty($skill->collaboration_goal))
                                 <p class="text-xs text-purple-700 dark:text-purple-300 mb-2">Teamwork: {{ $skill->collaboration_goal }}</p>
                             @endif
 
+                            @if($teamworkSentence)
+                                <p class="text-xs text-purple-700 dark:text-purple-300 mb-2">{{ $teamworkSentence }}</p>
+                            @endif
+
+                            <p class="text-xs text-gray-600 dark:text-gray-300 mb-2">Availability: {{ $skill->availability ?: 'Not specified' }}</p>
+
                             <div class="grid grid-cols-2 gap-2 mb-4 text-xs">
                                 <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
-                                    <p class="text-gray-500 dark:text-gray-300">Offering</p>
+                                    <p class="text-gray-500 dark:text-gray-300">{{ $offerLabel }}</p>
                                     <p class="font-bold text-gray-900 dark:text-white">{{ $offerCount }}</p>
                                 </div>
                                 <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
-                                    <p class="text-gray-500 dark:text-gray-300">Want to Learn</p>
+                                    <p class="text-gray-500 dark:text-gray-300">{{ $learnLabel }}</p>
                                     <p class="font-bold text-gray-900 dark:text-white">{{ $learnCount }}</p>
                                 </div>
                             </div>
 
                             @if($isMine)
-                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                                     <a href="{{ route('skills.edit', $skill) }}"
                                        class="px-2 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 text-center">Edit</a>
+                                    <form method="POST" action="{{ route('skills.toggle-status', $skill) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="w-full px-2 py-2 rounded-lg bg-yellow-100 text-yellow-800 hover:bg-yellow-200 whitespace-nowrap leading-tight">{{ $isInactive ? 'Activate' : 'Deactivate' }}</button>
+                                    </form>
                                     <form method="POST" action="{{ route('skills.destroy', $skill) }}" onsubmit="return confirm('Delete this skill?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="w-full px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Delete</button>
                                     </form>
-                                    <a href="{{ route('skills.matches', $skill) }}"
-                                       class="px-2 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-center">{{ $actionLabel }}</a>
+                                    @if(!$isInactive)
+                                        <a href="{{ route('skills.matches', $skill) }}"
+                                           class="px-2 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 text-center">{{ $actionLabel }}</a>
+                                    @else
+                                        <span class="px-2 py-2 rounded-lg bg-gray-100 text-gray-500 text-center">Inactive</span>
+                                    @endif
                                 </div>
                             @else
-                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                <div class="grid {{ $skillType === \App\Models\Skill::TYPE_EXCHANGE ? 'grid-cols-3' : 'grid-cols-2' }} gap-2 text-xs">
                                     <a href="{{ route('messages.index', ['user' => $skill->user_id]) }}"
                                        class="px-2 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-center">Message</a>
                                     <form method="POST" action="{{ route('reports.store') }}">
@@ -311,8 +409,10 @@
                                         <input type="hidden" name="description" value="Skill listing report from Skills directory.">
                                         <button type="submit" class="w-full px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Report</button>
                                     </form>
-                                    <a href="{{ route('messages.index', ['user' => $skill->user_id, 'draft' => 'Hi ' . ($skill->user->name ?? '') . ', I would like to request a skill exchange for ' . $skill->skill_name . '.']) }}"
-                                       class="px-2 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-center">Request Skill Exchange</a>
+                                    @if($skillType === \App\Models\Skill::TYPE_EXCHANGE)
+                                        <a href="{{ route('messages.index', ['user' => $skill->user_id, 'mode' => 'exchange', 'draft' => 'Hi ' . ($skill->user->name ?? '') . ', I would like to request a skill exchange: your ' . $skill->skill_name . ' for my ' . ($skill->exchange_skill_needed ?? 'skill') . '.']) }}"
+                                           class="px-2 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-center">Request Skill Exchange</a>
+                                    @endif
                                 </div>
                             @endif
                         </article>
@@ -351,10 +451,10 @@
 
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 mt-6">My Skills - I Want to Learn</h3>
 
-                @if($myLearningSkillNames->count())
+                @if($myLearningEntries->count())
                     <div class="flex flex-wrap gap-2">
-                        @foreach($myLearningSkillNames as $skillName)
-                            <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm">{{ $skillName }}</span>
+                        @foreach($myLearningEntries as $entry)
+                            <span class="px-3 py-1 rounded-full text-sm {{ $entry['status'] === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-200 text-gray-700' }}">{{ $entry['name'] }}</span>
                         @endforeach
                     </div>
                 @else

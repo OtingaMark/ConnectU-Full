@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 
 class EnsureNotSuspended
 {
+    /**
+     * Handle handle.
+     */
     public function handle(Request $request, Closure $next)
     {
         if (auth()->check() && strtolower(trim(auth()->user()->status ?? 'active')) === 'suspended') {

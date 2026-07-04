@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 
 class SuspensionAppealController extends Controller
 {
+    /**
+     * Handle create.
+     */
     public function create(Request $request)
     {
         $userId = (int) $request->query('user');
@@ -22,6 +25,9 @@ class SuspensionAppealController extends Controller
         ]);
     }
 
+    /**
+     * Handle store.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([

@@ -4,6 +4,9 @@ namespace App\Support;
 
 readonly class UserTeam
 {
+    /**
+     * Initialize class dependencies.
+     */
     public function __construct(
         public int $id,
         public string $name,

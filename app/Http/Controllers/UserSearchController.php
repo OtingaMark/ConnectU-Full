@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 
 class UserSearchController extends Controller
 {
+    /**
+     * Handle index.
+     */
     public function index(Request $request)
     {
         $search = $request->query('search');

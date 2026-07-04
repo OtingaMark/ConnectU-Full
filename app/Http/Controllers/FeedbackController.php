@@ -10,6 +10,9 @@ use Illuminate\Validation\Rule;
 
 class FeedbackController extends Controller
 {
+    /**
+     * Handle index.
+     */
     public function index()
     {
         $users = User::active()
@@ -45,6 +48,9 @@ class FeedbackController extends Controller
         ));
     }
 
+    /**
+     * Handle store.
+     */
     public function store(Request $request)
     {
         $feedbackType = $request->input('feedback_type', 'peer');

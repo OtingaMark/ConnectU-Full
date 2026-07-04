@@ -12,11 +12,17 @@ class PeerConnection extends Model
         'status',
     ];
 
+    /**
+     * Handle requester.
+     */
     public function requester()
     {
         return $this->belongsTo(User::class, 'requester_id');
     }
 
+    /**
+     * Handle receiver.
+     */
     public function receiver()
     {
         return $this->belongsTo(User::class, 'receiver_id');

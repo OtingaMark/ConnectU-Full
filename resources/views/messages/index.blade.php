@@ -3,6 +3,7 @@
     @php
         $allMessages = $receivedMessages->concat($sentMessages)->sortBy('created_at');
         $activeTab = request('tab', 'all');
+        $isExchangeMode = ($messageMode ?? request('mode')) === 'exchange';
 
         $activeUser = ($activeGroup ?? null)
             ? null
@@ -353,7 +354,9 @@
                             <h2 class="font-bold text-gray-900 dark:text-white">
                                 {{ $activeUser->name }}
                             </h2>
-                            <p class="text-sm text-blue-600">ConnectU peer</p>
+                            <p class="text-sm text-blue-600">
+                                {{ $isExchangeMode ? 'Skill exchange chat' : 'ConnectU peer' }}
+                            </p>
                         </div>
                     </div>
 
@@ -479,6 +482,20 @@
 
                 {{-- Direct send form --}}
                 <div class="bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+                    @if(!is_null($remainingFreeMessages))
+                        <div class="mb-2 text-xs {{ $remainingFreeMessages > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-red-700 dark:text-red-300' }}">
+                            {{ $remainingFreeMessages > 0
+                                ? 'You can send ' . $remainingFreeMessages . ' more message(s) before connection approval is required for unlimited chat.'
+                                : 'You reached the 3-message intro limit. Wait for connection approval to continue messaging.' }}
+                        </div>
+                    @endif
+
+                    @if($isExchangeMode)
+                        <div class="mb-2 text-xs text-emerald-700 dark:text-emerald-300">
+                            Exchange mode is on. Your message will be treated as a skill exchange request.
+                        </div>
+                    @endif
+
                     <form action="{{ route('messages.store') }}"
                           method="POST"
                           enctype="multipart/form-data"
@@ -486,6 +503,7 @@
                         @csrf
 
                         <input type="hidden" name="receiver_id" value="{{ $activeUser->id }}">
+                        <input type="hidden" name="mode" value="{{ $isExchangeMode ? 'exchange' : '' }}">
 
                         <input type="file"
                                id="message_file"
@@ -506,7 +524,7 @@
                             <input type="text"
                                    name="message"
                                 value="{{ old('message', $draftMessage ?? '') }}"
-                                   placeholder="Type a message"
+                                              placeholder="{{ $isExchangeMode ? 'Type your skill exchange request...' : 'Type a message' }}"
                                 class="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300 rounded-full px-5 py-3 focus:ring-2 focus:ring-blue-500">
 
                             <button type="submit"

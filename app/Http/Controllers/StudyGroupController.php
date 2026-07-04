@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Storage;
 
 class StudyGroupController extends Controller
 {
+    /**
+     * List groups visible to the current user and rank them by relevance.
+     */
     public function index()
     {
         $myProfile = auth()->user()->profile;
@@ -108,6 +111,9 @@ class StudyGroupController extends Controller
         return view('study-groups.index', compact('studyGroups'));
     }
 
+    /**
+     * Show group details, access checks, and eligible users for invitations.
+     */
     public function show(StudyGroup $studyGroup)
     {
         $studyGroup->load(['user', 'members.user.profile', 'invitations.receiver', 'invitations.sender', 'messages.user']);
@@ -176,11 +182,17 @@ class StudyGroupController extends Controller
         return view('study-groups.show', compact('studyGroup', 'inviteUsers', 'canInviteMembers'));
     }
 
+    /**
+     * Show the create form for a new study group.
+     */
     public function create()
     {
         return view('study-groups.create');
     }
 
+    /**
+     * Persist a new study group and add the creator as the first member.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -218,6 +230,9 @@ class StudyGroupController extends Controller
             ->with('success', 'Learning group created successfully.');
     }
 
+    /**
+     * Join a study group directly or submit a pending join request.
+     */
     public function join(StudyGroup $studyGroup)
     {
         if ($studyGroup->isSuspended()) {
@@ -267,6 +282,9 @@ class StudyGroupController extends Controller
             ->with('success', 'You have joined the learning group successfully.');
     }
 
+    /**
+     * Send an invitation to a connected active user for this group.
+     */
     public function invite(Request $request, StudyGroup $studyGroup)
     {
         if ($studyGroup->isSuspended()) {
@@ -315,6 +333,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Group invitation sent successfully.');
     }
 
+    /**
+     * Post a text/file/link message to the group chat.
+     */
     public function sendMessage(Request $request, StudyGroup $studyGroup)
     {
         if ($studyGroup->isSuspended()) {
@@ -367,6 +388,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Message sent to group.');
     }
 
+    /**
+     * Serve a stored group message attachment to authorized members.
+     */
     public function groupAttachment(GroupMessage $message)
     {
         $isMember = GroupMember::where('study_group_id', $message->study_group_id)
@@ -384,6 +408,9 @@ class StudyGroupController extends Controller
         return response()->file(storage_path('app/public/' . $message->file_path));
     }
 
+    /**
+     * Remove current user from group membership with role safety checks.
+     */
     public function leave(StudyGroup $studyGroup)
     {
         $membership = GroupMember::where('study_group_id', $studyGroup->id)
@@ -419,6 +446,9 @@ class StudyGroupController extends Controller
             ->with('success', 'You left the group successfully.');
     }
 
+    /**
+     * Return the current user's role in the given group.
+     */
     private function getMyGroupRole(StudyGroup $studyGroup): ?string
     {
         return GroupMember::where('study_group_id', $studyGroup->id)
@@ -426,11 +456,17 @@ class StudyGroupController extends Controller
             ->value('role');
     }
 
+    /**
+     * Determine whether the current user can manage group members/settings.
+     */
     private function userCanManageGroup(StudyGroup $studyGroup): bool
     {
         return in_array($this->getMyGroupRole($studyGroup), ['creator', 'admin']);
     }
 
+    /**
+     * Count creator/admin members to enforce admin safety rules.
+     */
     private function adminCount(StudyGroup $studyGroup): int
     {
         return GroupMember::where('study_group_id', $studyGroup->id)
@@ -438,6 +474,9 @@ class StudyGroupController extends Controller
             ->count();
     }
 
+    /**
+     * Promote a regular member to admin.
+     */
     public function promoteMember(StudyGroup $studyGroup, GroupMember $member)
     {
         $myRole = $this->getMyGroupRole($studyGroup);
@@ -459,6 +498,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Member promoted to admin successfully.');
     }
 
+    /**
+     * Demote an admin to member (creator-only action).
+     */
     public function demoteMember(StudyGroup $studyGroup, GroupMember $member)
     {
         $myRole = $this->getMyGroupRole($studyGroup);
@@ -488,6 +530,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Admin demoted to member successfully.');
     }
 
+    /**
+     * Remove a member from the group with role and safety guards.
+     */
     public function removeMember(StudyGroup $studyGroup, GroupMember $member)
     {
         $myRole = $this->getMyGroupRole($studyGroup);
@@ -528,6 +573,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Member removed successfully.');
     }
 
+    /**
+     * Show the group edit form to creator/admin users.
+     */
     public function edit(StudyGroup $studyGroup)
     {
         $membership = GroupMember::where('study_group_id', $studyGroup->id)
@@ -542,6 +590,9 @@ class StudyGroupController extends Controller
         return view('study-groups.edit', compact('studyGroup'));
     }
 
+    /**
+     * Update group settings and enforce member-cap constraints.
+     */
     public function update(Request $request, StudyGroup $studyGroup)
     {
         $membership = GroupMember::where('study_group_id', $studyGroup->id)
@@ -588,6 +639,9 @@ class StudyGroupController extends Controller
             ->with('success', 'Group settings updated successfully.');
     }
 
+    /**
+     * Submit a pending join request for groups requiring approval.
+     */
     public function requestToJoin(StudyGroup $studyGroup)
     {
         if ($studyGroup->isSuspended()) {
@@ -615,6 +669,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Join request sent.');
     }
 
+    /**
+     * Approve a join request and add the user as a member.
+     */
     public function approveJoinRequest(GroupJoinRequest $joinRequest)
     {
         $studyGroup = $joinRequest->studyGroup;
@@ -643,6 +700,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Join request approved.');
     }
 
+    /**
+     * Decline a pending join request.
+     */
     public function declineJoinRequest(GroupJoinRequest $joinRequest)
     {
         $studyGroup = $joinRequest->studyGroup;
@@ -656,6 +716,9 @@ class StudyGroupController extends Controller
         return back()->with('success', 'Join request declined.');
     }
 
+    /**
+     * Submit an appeal when a suspended group's creator requests review.
+     */
     public function appealSuspension(Request $request, StudyGroup $studyGroup)
     {
         $membership = GroupMember::where('study_group_id', $studyGroup->id)
