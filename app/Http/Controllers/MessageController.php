@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 class MessageController extends Controller
 {
     /**
-     * Handle index.
+     * Display the main page data for this feature.
      */
     public function index()
     {
@@ -168,7 +168,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Handle store.
+     * Validate input and persist a new record.
      */
     public function store(Request $request)
     {
@@ -258,7 +258,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Handle attachment.
+     * Serve a stored attachment after authorization checks.
      */
     public function attachment(Message $message)
     {
@@ -274,7 +274,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Handle get my groups.
+     * Return groups that the current user belongs to.
      */
     public function getMyGroups()
     {
@@ -286,7 +286,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Handle group chat.
+     * Open the messaging view for a specific study group.
      */
     public function groupChat(
         StudyGroup $studyGroup

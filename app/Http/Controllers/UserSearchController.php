@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class UserSearchController extends Controller
 {
     /**
-     * Handle index.
+     * Display the main page data for this feature.
      */
     public function index(Request $request)
     {

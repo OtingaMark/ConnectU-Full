@@ -37,7 +37,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Handle is suspended.
+     * Check whether the user account is currently suspended.
      */
     public function isSuspended(): bool
     {
@@ -45,7 +45,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Handle scope active.
+     * Scope query results to active records.
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -65,7 +65,7 @@ class User extends Authenticatable
     }
 
         /**
-         * Handle accent color.
+         * Execute the accent color operation for this method.
          */
         public function accentColor(): string
         {
@@ -78,7 +78,7 @@ class User extends Authenticatable
         }
 
     /**
-     * Handle profile.
+     * Execute the profile operation for this method.
      */
     public function profile()
 {
@@ -86,7 +86,7 @@ class User extends Authenticatable
 }
 
 /**
- * Handle study groups.
+ * Execute the study groups operation for this method.
  */
 public function studyGroups()
 {
@@ -94,7 +94,7 @@ public function studyGroups()
 }
 
 /**
- * Handle skills.
+ * Display the skill management listing.
  */
 public function skills()
 {
@@ -102,7 +102,7 @@ public function skills()
 }
 
 /**
- * Handle resources.
+ * Execute the resources operation for this method.
  */
 public function resources()
 {
@@ -110,7 +110,7 @@ public function resources()
 }
 
 /**
- * Handle sent messages.
+ * Define the relationship to direct messages sent by this user.
  */
 public function sentMessages()
 {
@@ -118,7 +118,7 @@ public function sentMessages()
 }
 
 /**
- * Handle received messages.
+ * Define the relationship to direct messages received by this user.
  */
 public function receivedMessages()
 {
@@ -126,7 +126,7 @@ public function receivedMessages()
 }
 
 /**
- * Handle feedback given.
+ * Define the relationship to feedback records given by this user.
  */
 public function feedbackGiven()
 {
@@ -134,14 +134,14 @@ public function feedbackGiven()
 }
 
 /**
- * Handle feedback received.
+ * Define the relationship to feedback records received by this user.
  */
 public function feedbackReceived()
 {
     return $this->hasMany(Feedback::class, 'receiver_id');
 }
 /**
- * Handle sent connections.
+ * Define the relationship to connection requests sent by this user.
  */
 public function sentConnections()
 {
@@ -149,7 +149,7 @@ public function sentConnections()
 }
 
 /**
- * Handle received connections.
+ * Define the relationship to connection requests received by this user.
  */
 public function receivedConnections()
 {
@@ -157,7 +157,7 @@ public function receivedConnections()
 }
 
 /**
- * Handle received group invitations.
+ * Define the relationship to group invitations received by this user.
  */
 public function receivedGroupInvitations()
 {
@@ -165,7 +165,7 @@ public function receivedGroupInvitations()
 }
 
 /**
- * Handle sent group invitations.
+ * Define the relationship to group invitations sent by this user.
  */
 public function sentGroupInvitations()
 {
@@ -173,7 +173,7 @@ public function sentGroupInvitations()
 }
 
 /**
- * Handle group messages.
+ * Define the relationship to group messages sent by this user.
  */
 public function groupMessages()
 {
@@ -181,7 +181,7 @@ public function groupMessages()
 }
 
 /**
- * Handle reports submitted.
+ * Define the relationship to reports submitted by this user.
  */
 public function reportsSubmitted()
 {
@@ -189,7 +189,7 @@ public function reportsSubmitted()
 }
 
 /**
- * Handle reports received.
+ * Define the relationship to reports where this user is the target.
  */
 public function reportsReceived()
 {
@@ -197,7 +197,7 @@ public function reportsReceived()
 }
 
 /**
- * Handle suspension appeals.
+ * Define the relationship to suspension appeals submitted by this user.
  */
 public function suspensionAppeals()
 {
@@ -205,7 +205,7 @@ public function suspensionAppeals()
 }
 
 /**
- * Handle reviewed appeals.
+ * Define the relationship to appeals reviewed by this user.
  */
 public function reviewedAppeals()
 {
@@ -213,7 +213,7 @@ public function reviewedAppeals()
 }
 
 /**
- * Handle submitted group appeals.
+ * Define the relationship to group appeals submitted by this user.
  */
 public function submittedGroupAppeals()
 {

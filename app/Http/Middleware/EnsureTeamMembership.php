@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureTeamMembership
 {
     /**
-     * Handle an incoming request.
+     * Execute the an incoming request operation for this method.
      *
      * @param  Closure(Request): (Response)  $next
      */

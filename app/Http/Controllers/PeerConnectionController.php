@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class PeerConnectionController extends Controller
 {
     /**
-     * Handle accept.
+     * Approve the incoming request and apply the related changes.
      */
     public function accept(PeerConnection $connection)
     {
@@ -24,7 +24,7 @@ class PeerConnectionController extends Controller
     }
 
     /**
-     * Handle decline.
+     * Decline the incoming request and update its status.
      */
     public function decline(PeerConnection $connection)
     {
@@ -38,7 +38,7 @@ class PeerConnectionController extends Controller
         );
     }
     /**
-     * Handle send.
+     * Send the request and persist its initial state.
      */
     public function send($userId)
 {

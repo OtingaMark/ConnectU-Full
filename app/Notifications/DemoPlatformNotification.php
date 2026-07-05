@@ -21,7 +21,7 @@ class DemoPlatformNotification extends Notification
     }
 
     /**
-     * Handle via.
+     * Define which notification channels should be used.
      */
     public function via(object $notifiable): array
     {
@@ -29,7 +29,7 @@ class DemoPlatformNotification extends Notification
     }
 
     /**
-     * Handle to array.
+     * Convert the notification payload into an array representation.
      */
     public function toArray(object $notifiable): array
     {

@@ -14,7 +14,7 @@ class GroupMember extends Model
     ];
 
     /**
-     * Handle user.
+     * Define the relationship to the user model.
      */
     public function user()
     {
@@ -22,7 +22,7 @@ class GroupMember extends Model
     }
 
     /**
-     * Handle study group.
+     * Define the relationship to the study group model.
      */
     public function studyGroup()
     {

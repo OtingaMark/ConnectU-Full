@@ -179,7 +179,7 @@ trait HasTeams
     }
 
     /**
-     * Handle fallback team.
+     * Resolve a fallback team for the current user context.
      */
     public function fallbackTeam(?Team $excluding = null): ?Team
     {

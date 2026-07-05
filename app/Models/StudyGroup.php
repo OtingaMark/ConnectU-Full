@@ -32,7 +32,7 @@ class StudyGroup extends Model
     ];
 
     /**
-     * Handle is suspended.
+     * Check whether the user account is currently suspended.
      */
     public function isSuspended(): bool
     {
@@ -40,7 +40,7 @@ class StudyGroup extends Model
     }
 
     /**
-     * Handle user.
+     * Define the relationship to the user model.
      */
     public function user()
     {
@@ -48,7 +48,7 @@ class StudyGroup extends Model
     }
 
     /**
-     * Handle members.
+     * Execute the members operation for this method.
      */
     public function members()
     {
@@ -56,7 +56,7 @@ class StudyGroup extends Model
     }
 
     /**
-     * Handle invitations.
+     * Execute the invitations operation for this method.
      */
     public function invitations()
     {
@@ -64,7 +64,7 @@ class StudyGroup extends Model
     }
 
     /**
-     * Handle messages.
+     * Execute the messages operation for this method.
      */
     public function messages()
     {
@@ -72,7 +72,7 @@ class StudyGroup extends Model
     }
 
     /**
-     * Handle join requests.
+     * Execute the join requests operation for this method.
      */
     public function joinRequests()
     {
@@ -80,7 +80,7 @@ class StudyGroup extends Model
     }
 
     /**
-     * Handle reports.
+     * Display the moderation report listing.
      */
     public function reports()
     {
@@ -88,7 +88,7 @@ class StudyGroup extends Model
     }
 
     /**
-     * Handle suspension appeals.
+     * Define the relationship to suspension appeals submitted by this user.
      */
     public function suspensionAppeals()
     {

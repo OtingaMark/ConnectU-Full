@@ -16,7 +16,7 @@ class GroupMessage extends Model
     ];
 
     /**
-     * Handle study group.
+     * Define the relationship to the study group model.
      */
     public function studyGroup()
     {
@@ -24,7 +24,7 @@ class GroupMessage extends Model
     }
 
     /**
-     * Handle user.
+     * Define the relationship to the user model.
      */
     public function user()
     {
@@ -32,7 +32,7 @@ class GroupMessage extends Model
     }
 
     /**
-     * Handle reports.
+     * Display the moderation report listing.
      */
     public function reports()
     {

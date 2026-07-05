@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class ProfileController extends Controller
 {
     /**
-     * Handle edit.
+     * Show the form used to edit an existing record.
      */
     public function edit()
     {
@@ -22,7 +22,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Handle update.
+     * Validate input and persist updates to an existing record.
      */
     public function update(Request $request)
     {
@@ -55,7 +55,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Handle show.
+     * Display detailed information for a specific record.
      */
     public function show(User $user)
     {

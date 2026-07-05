@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 class ReportController extends Controller
 {
     /**
-     * Handle store.
+     * Validate input and persist a new record.
      */
     public function store(Request $request)
     {

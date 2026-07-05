@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class ResourceController extends Controller
 {
     /**
-     * Handle index.
+     * Display the main page data for this feature.
      */
     public function index()
     {
@@ -21,7 +21,7 @@ class ResourceController extends Controller
     }
 
     /**
-     * Handle store.
+     * Validate input and persist a new record.
      */
     public function store(Request $request)
     {

@@ -8,7 +8,7 @@ use App\Models\GroupMember;
 class GroupInvitationController extends Controller
 {
     /**
-     * Handle accept.
+     * Approve the incoming request and apply the related changes.
      */
     public function accept(GroupInvitation $invitation)
     {
@@ -35,7 +35,7 @@ class GroupInvitationController extends Controller
     }
 
     /**
-     * Handle decline.
+     * Decline the incoming request and update its status.
      */
     public function decline(GroupInvitation $invitation)
     {

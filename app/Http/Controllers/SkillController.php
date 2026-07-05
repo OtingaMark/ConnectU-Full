@@ -25,7 +25,7 @@ class SkillController extends Controller
     ];
 
     /**
-     * Handle skill payload.
+     * Validate and normalize incoming skill payload data.
      */
     private function skillPayload(Request $request): array
     {
@@ -68,7 +68,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle is duplicate exchange.
+     * Check whether the same exchange pair already exists.
      */
     private function isDuplicateExchange(array $validated, ?int $ignoreId = null): bool
     {
@@ -90,7 +90,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle index.
+     * Display the main page data for this feature.
      */
     public function index()
     {
@@ -109,7 +109,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle store.
+     * Validate input and persist a new record.
      */
     public function store(Request $request)
     {
@@ -141,7 +141,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle edit.
+     * Show the form used to edit an existing record.
      */
     public function edit(Skill $skill)
     {
@@ -151,7 +151,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle update.
+     * Validate input and persist updates to an existing record.
      */
     public function update(Request $request, Skill $skill)
     {
@@ -174,7 +174,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle toggle status.
+     * Toggle the record status between active and inactive.
      */
     public function toggleStatus(Skill $skill)
     {
@@ -189,7 +189,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle destroy.
+     * Delete the specified record from storage.
      */
     public function destroy(Skill $skill)
     {
@@ -202,7 +202,7 @@ class SkillController extends Controller
     }
 
     /**
-     * Handle matches.
+     * Build and return ranked matching results.
      */
     public function matches(Request $request, Skill $skill)
     {

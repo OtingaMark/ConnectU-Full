@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 class EnsureNotSuspended
 {
     /**
-     * Handle handle.
+     * Process the incoming request and return the next middleware response.
      */
     public function handle(Request $request, Closure $next)
     {

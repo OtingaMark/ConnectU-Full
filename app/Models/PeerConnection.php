@@ -13,7 +13,7 @@ class PeerConnection extends Model
     ];
 
     /**
-     * Handle requester.
+     * Define the relationship to the requester user.
      */
     public function requester()
     {
@@ -21,7 +21,7 @@ class PeerConnection extends Model
     }
 
     /**
-     * Handle receiver.
+     * Define the relationship to the receiver user.
      */
     public function receiver()
     {

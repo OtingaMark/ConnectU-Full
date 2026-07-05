@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class SuspensionAppealController extends Controller
 {
     /**
-     * Handle create.
+     * Show the form used to create a new record.
      */
     public function create(Request $request)
     {
@@ -26,7 +26,7 @@ class SuspensionAppealController extends Controller
     }
 
     /**
-     * Handle store.
+     * Validate input and persist a new record.
      */
     public function store(Request $request)
     {

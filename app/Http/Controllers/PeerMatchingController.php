@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class PeerMatchingController extends Controller
 {
     /**
-     * Handle index.
+     * Display the main page data for this feature.
      */
     public function index()
     {
@@ -123,7 +123,7 @@ class PeerMatchingController extends Controller
     }
 
     /**
-     * Handle split words.
+     * Split free text into normalized searchable terms.
      */
     private function splitWords($value)
     {

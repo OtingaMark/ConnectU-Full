@@ -15,7 +15,7 @@ class Feedback extends Model
     ];
 
     /**
-     * Handle giver.
+     * Define the relationship to the feedback giver.
      */
     public function giver()
     {
@@ -23,7 +23,7 @@ class Feedback extends Model
     }
 
     /**
-     * Handle receiver.
+     * Define the relationship to the receiver user.
      */
     public function receiver()
     {
@@ -31,7 +31,7 @@ class Feedback extends Model
     }
 
     /**
-     * Handle reports.
+     * Display the moderation report listing.
      */
     public function reports()
     {

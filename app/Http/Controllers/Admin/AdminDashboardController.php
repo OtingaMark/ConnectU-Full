@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 class AdminDashboardController extends Controller
 {
     /**
-     * Handle ensure admin.
+     * Ensure the current user has administrator access.
      */
     private function ensureAdmin(): void
     {
@@ -28,7 +28,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle index.
+     * Display the main page data for this feature.
      */
     public function index()
     {
@@ -44,7 +44,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle users.
+     * Display the user management listing.
      */
     public function users()
     {
@@ -56,7 +56,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle edit user.
+     * Execute the edit user operation for this method.
      */
     public function editUser(User $user)
     {
@@ -68,7 +68,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle groups.
+     * Display the study-group management listing.
      */
     public function groups()
     {
@@ -80,7 +80,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle edit group.
+     * Execute the edit group operation for this method.
      */
     public function editGroup(StudyGroup $studyGroup)
     {
@@ -92,7 +92,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle update group.
+     * Execute the update group operation for this method.
      */
     public function updateGroup(Request $request, StudyGroup $studyGroup)
     {
@@ -118,7 +118,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle skills.
+     * Display the skill management listing.
      */
     public function skills()
     {
@@ -130,7 +130,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle feedback.
+     * Display the feedback management listing.
      */
     public function feedback()
     {
@@ -142,7 +142,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle reports.
+     * Display the moderation report listing.
      */
     public function reports()
     {
@@ -200,7 +200,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle generate report.
+     * Generate and return the requested admin report output.
      */
     public function generateReport()
     {
@@ -226,7 +226,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle analytics.
+     * Display analytics metrics for administrative insights.
      */
     public function analytics()
     {
@@ -242,7 +242,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle change role.
+     * Change the target user role using validated rules.
      */
     public function changeRole(User $user)
     {
@@ -263,7 +263,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle update user.
+     * Execute the update user operation for this method.
      */
     public function updateUser(Request $request, User $user)
     {
@@ -298,7 +298,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle suspend user.
+     * Suspend the target user and record moderation context.
      */
     public function suspendUser(User $user)
     {
@@ -336,7 +336,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle review report.
+     * Review a submitted report and prepare moderation outcome.
      */
     public function reviewReport(Request $request, Report $report)
     {
@@ -361,7 +361,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle resolve report.
+     * Resolve the report and store final moderation actions.
      */
     public function resolveReport(Request $request, Report $report)
     {
@@ -386,7 +386,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle reject report.
+     * Reject the report and preserve a moderation note.
      */
     public function rejectReport(Request $request, Report $report)
     {
@@ -411,7 +411,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle suspend reported user.
+     * Suspend the user linked to the current report.
      */
     public function suspendReportedUser(Request $request, Report $report)
     {
@@ -456,7 +456,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle suspend reported group.
+     * Suspend the study group linked to the current report.
      */
     public function suspendReportedGroup(Request $request, Report $report)
     {
@@ -493,7 +493,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle delete reported content.
+     * Delete the content referenced by the report.
      */
     public function deleteReportedContent(Report $report)
     {
@@ -537,7 +537,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle approve appeal.
+     * Approve the suspension appeal and restore user access.
      */
     public function approveAppeal(Request $request, SuspensionAppeal $appeal)
     {
@@ -564,7 +564,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle reject appeal.
+     * Reject the suspension appeal and keep suspension active.
      */
     public function rejectAppeal(Request $request, SuspensionAppeal $appeal)
     {
@@ -585,7 +585,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle approve group appeal.
+     * Approve the group suspension appeal and restore group access.
      */
     public function approveGroupAppeal(Request $request, GroupSuspensionAppeal $appeal)
     {
@@ -612,7 +612,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle reject group appeal.
+     * Reject the group suspension appeal and keep suspension active.
      */
     public function rejectGroupAppeal(Request $request, GroupSuspensionAppeal $appeal)
     {
@@ -633,7 +633,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle resolve reported user.
+     * Resolve and return the user associated with this report.
      */
     private function resolveReportedUser(Report $report): ?User
     {
@@ -665,7 +665,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle is report completed.
+     * Check whether report moderation is fully completed.
      */
     private function isReportCompleted(Report $report): bool
     {
@@ -673,7 +673,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle delete user.
+     * Delete the target user and related owned content.
      */
     public function deleteUser(User $user)
     {
@@ -699,7 +699,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle delete group.
+     * Delete the target group and related records.
      */
     public function deleteGroup(StudyGroup $studyGroup)
     {
@@ -711,7 +711,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Handle delete skill.
+     * Delete the target skill from the platform.
      */
     public function deleteSkill(Skill $skill)
     {

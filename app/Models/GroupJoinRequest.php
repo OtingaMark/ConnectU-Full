@@ -13,7 +13,7 @@ class GroupJoinRequest extends Model
     ];
 
     /**
-     * Handle study group.
+     * Define the relationship to the study group model.
      */
     public function studyGroup()
     {
@@ -21,7 +21,7 @@ class GroupJoinRequest extends Model
     }
 
     /**
-     * Handle user.
+     * Define the relationship to the user model.
      */
     public function user()
     {

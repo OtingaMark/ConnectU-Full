@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class SettingsController extends Controller
 {
     /**
-     * Handle edit.
+     * Show the form used to edit an existing record.
      */
     public function edit()
     {
@@ -15,7 +15,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Handle update.
+     * Validate input and persist updates to an existing record.
      */
     public function update(Request $request)
     {

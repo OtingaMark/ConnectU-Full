@@ -17,7 +17,7 @@ class Message extends Model
 ];
 
     /**
-     * Handle sender.
+     * Define the relationship to the sender user.
      */
     public function sender()
     {
@@ -25,7 +25,7 @@ class Message extends Model
     }
 
     /**
-     * Handle receiver.
+     * Define the relationship to the receiver user.
      */
     public function receiver()
     {
@@ -33,7 +33,7 @@ class Message extends Model
     }
 
     /**
-     * Handle reports.
+     * Display the moderation report listing.
      */
     public function reports()
     {

@@ -27,7 +27,7 @@ class Report extends Model
     ];
 
     /**
-     * Handle reporter.
+     * Define the relationship to the reporting user.
      */
     public function reporter()
     {
@@ -35,7 +35,7 @@ class Report extends Model
     }
 
     /**
-     * Handle reported user.
+     * Define the relationship to the reported user.
      */
     public function reportedUser()
     {
@@ -43,7 +43,7 @@ class Report extends Model
     }
 
     /**
-     * Handle study group.
+     * Define the relationship to the study group model.
      */
     public function studyGroup()
     {
@@ -51,7 +51,7 @@ class Report extends Model
     }
 
     /**
-     * Handle group message.
+     * Define the relationship to the reported group message.
      */
     public function groupMessage()
     {
@@ -59,7 +59,7 @@ class Report extends Model
     }
 
     /**
-     * Handle direct message.
+     * Define the relationship to the reported direct message.
      */
     public function directMessage()
     {
@@ -67,7 +67,7 @@ class Report extends Model
     }
 
     /**
-     * Handle feedback.
+     * Display the feedback management listing.
      */
     public function feedback()
     {
@@ -75,7 +75,7 @@ class Report extends Model
     }
 
     /**
-     * Handle skill.
+     * Define the relationship to the skill model.
      */
     public function skill()
     {
@@ -83,7 +83,7 @@ class Report extends Model
     }
 
     /**
-     * Handle reviewer.
+     * Define the relationship to the reviewer user.
      */
     public function reviewer()
     {

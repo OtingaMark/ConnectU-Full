@@ -22,7 +22,7 @@ class GroupSuspensionAppeal extends Model
     ];
 
     /**
-     * Handle study group.
+     * Define the relationship to the study group model.
      */
     public function studyGroup()
     {
@@ -30,7 +30,7 @@ class GroupSuspensionAppeal extends Model
     }
 
     /**
-     * Handle requester.
+     * Define the relationship to the requester user.
      */
     public function requester()
     {
@@ -38,7 +38,7 @@ class GroupSuspensionAppeal extends Model
     }
 
     /**
-     * Handle reviewer.
+     * Define the relationship to the reviewer user.
      */
     public function reviewer()
     {

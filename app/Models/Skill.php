@@ -43,7 +43,7 @@ class Skill extends Model
     }
 
     /**
-     * Handle get normalized type attribute.
+     * Return the normalized skill type accessor value.
      */
     public function getNormalizedTypeAttribute(): string
     {
@@ -51,7 +51,7 @@ class Skill extends Model
     }
 
     /**
-     * Handle is active.
+     * Check whether the current model is active.
      */
     public function isActive(): bool
     {
@@ -59,7 +59,7 @@ class Skill extends Model
     }
 
     /**
-     * Handle user.
+     * Define the relationship to the user model.
      */
     public function user()
     {

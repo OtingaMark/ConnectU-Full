@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 class FeedbackController extends Controller
 {
     /**
-     * Handle index.
+     * Display the main page data for this feature.
      */
     public function index()
     {
@@ -49,7 +49,7 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Handle store.
+     * Validate input and persist a new record.
      */
     public function store(Request $request)
     {

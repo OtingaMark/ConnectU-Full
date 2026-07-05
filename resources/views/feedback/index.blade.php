@@ -71,7 +71,7 @@
 
                 <form action="{{ route('feedback.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     @csrf
-                    <input type="hidden" name="feedback_type" id="feedbackType" value="peer">
+                    <input type="hidden" name="feedback_type" id="feedbackType" value="{{ old('feedback_type', 'peer') }}">
 
                     <div id="peerReceiverWrap" class="md:col-span-2 space-y-2">
                         <input type="text" id="peerSearch" placeholder="Search active peer by name or email"
@@ -85,7 +85,7 @@
                         </select>
                     </div>
 
-                    <select name="rating" id="ratingSelect" required class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
+                    <select name="rating" id="ratingSelect" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-3">
                         <option value="">Select rating</option>
                         <option value="1" @selected(old('rating') == '1')>1 - Poor</option>
                         <option value="2" @selected(old('rating') == '2')>2 - Fair</option>
@@ -402,7 +402,7 @@
             showFeedbackToast(message || 'This feature will be enabled in a future backend update.');
         }
 
-        setSubmitMode('peer');
+        setSubmitMode(feedbackType?.value === 'app' ? 'app' : 'peer');
         setTab('received');
         applyPeerSearch();
     </script>

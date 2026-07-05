@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class RegisterResponse implements RegisterResponseContract
 {
     /**
-     * Handle to response.
+     * Convert the response contract into an HTTP response.
      */
     public function toResponse($request): Response
     {

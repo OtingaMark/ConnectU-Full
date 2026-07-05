@@ -16,7 +16,7 @@ class Resource extends Model
     ];
 
     /**
-     * Handle user.
+     * Define the relationship to the user model.
      */
     public function user()
     {

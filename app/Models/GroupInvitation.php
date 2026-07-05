@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class GroupInvitation extends Model
 {
     /**
-     * Handle sender.
+     * Define the relationship to the sender user.
      */
     public function sender()
     {
@@ -15,7 +15,7 @@ class GroupInvitation extends Model
     }
 
     /**
-     * Handle receiver.
+     * Define the relationship to the receiver user.
      */
     public function receiver()
     {
@@ -30,7 +30,7 @@ class GroupInvitation extends Model
     ];
 
     /**
-     * Handle study group.
+     * Define the relationship to the study group model.
      */
     public function studyGroup()
     {
@@ -38,7 +38,7 @@ class GroupInvitation extends Model
     }
 
     /**
-     * Handle update status.
+     * Update the model status to the provided value.
      */
     public function updateStatus($status)
     {

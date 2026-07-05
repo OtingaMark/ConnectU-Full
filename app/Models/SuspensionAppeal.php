@@ -21,7 +21,7 @@ class SuspensionAppeal extends Model
     ];
 
     /**
-     * Handle user.
+     * Define the relationship to the user model.
      */
     public function user()
     {
@@ -29,7 +29,7 @@ class SuspensionAppeal extends Model
     }
 
     /**
-     * Handle reviewer.
+     * Define the relationship to the reviewer user.
      */
     public function reviewer()
     {
