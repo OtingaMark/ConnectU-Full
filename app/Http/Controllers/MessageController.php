@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 class MessageController extends Controller
 {
     /**
-     * Display the main page data for this feature.
+     * Build direct and group chat data for the unified messaging page.
      */
     public function index()
     {
@@ -168,7 +168,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Validate input and persist a new record.
+     * Validate and send a direct message, enforcing connection/message limits.
      */
     public function store(Request $request)
     {
@@ -258,7 +258,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Serve a stored attachment after authorization checks.
+     * Serve a direct-message attachment after access checks.
      */
     public function attachment(Message $message)
     {
@@ -274,7 +274,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Return groups that the current user belongs to.
+     * Return active groups that include the current user as a member.
      */
     public function getMyGroups()
     {
@@ -286,7 +286,7 @@ class MessageController extends Controller
     }
 
     /**
-     * Open the messaging view for a specific study group.
+     * Redirect to the messaging page focused on a specific group chat.
      */
     public function groupChat(
         StudyGroup $studyGroup

@@ -43,7 +43,7 @@ class Report extends Model
     }
 
     /**
-     * Define the relationship to the study group model.
+     * Define the relationship to the associated study group.
      */
     public function studyGroup()
     {
@@ -67,7 +67,7 @@ class Report extends Model
     }
 
     /**
-     * Display the feedback management listing.
+     * Define the relationship to the feedback record referenced by this report.
      */
     public function feedback()
     {
@@ -75,7 +75,7 @@ class Report extends Model
     }
 
     /**
-     * Define the relationship to the skill model.
+     * Define the relationship to the skill referenced by this report.
      */
     public function skill()
     {
@@ -83,7 +83,7 @@ class Report extends Model
     }
 
     /**
-     * Define the relationship to the reviewer user.
+     * Define the relationship to the admin reviewer.
      */
     public function reviewer()
     {

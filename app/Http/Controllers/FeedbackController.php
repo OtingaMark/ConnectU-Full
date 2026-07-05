@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 class FeedbackController extends Controller
 {
     /**
-     * Display the main page data for this feature.
+     * Display feedback forms and history for the current user.
      */
     public function index()
     {
@@ -49,18 +49,26 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Validate input and persist a new record.
+     * Validate and store peer feedback or app feedback submissions.
      */
     public function store(Request $request)
     {
         $feedbackType = $request->input('feedback_type', 'peer');
 
+        // If no peer receiver is provided, treat submission as app feedback.
+        // This prevents frontend mode-toggle mismatches from forcing peer validation.
+        if ($feedbackType !== 'app' && !$request->filled('receiver_id')) {
+            $feedbackType = 'app';
+        }
+
         if ($feedbackType === 'app') {
             $validated = $request->validate([
                 'feedback_type' => ['required', Rule::in(['peer', 'app'])],
                 'rating' => 'nullable|integer|min:1|max:5',
-                'comment' => 'required|string|max:500',
+                'comment' => 'nullable|string|max:500',
             ]);
+
+            $rating = array_key_exists('rating', $validated) ? $validated['rating'] : null;
 
             $adminReceiver = User::query()
                 ->where('role', 'admin')
@@ -68,17 +76,15 @@ class FeedbackController extends Controller
                 ->orderBy('id')
                 ->first();
 
-            if (!$adminReceiver) {
-                return redirect()->route('feedback.index')
-                    ->with('error', 'No active admin is available to receive app feedback right now.');
-            }
+            // Fallback to current user to avoid blocking app feedback when no admin is active.
+            $receiverId = $adminReceiver?->id ?? Auth::id();
 
             Feedback::create([
                 'giver_id' => Auth::id(),
-                'receiver_id' => $adminReceiver->id,
+                'receiver_id' => $receiverId,
                 'feedback_type' => 'app',
-                'rating' => $validated['rating'] ?? null,
-                'comment' => $validated['comment'],
+                'rating' => $rating,
+                'comment' => $validated['comment'] ?? null,
             ]);
 
             return redirect()->route('feedback.index')
