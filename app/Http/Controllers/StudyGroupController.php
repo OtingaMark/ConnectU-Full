@@ -24,6 +24,7 @@ class StudyGroupController extends Controller
     {
         $myProfile = auth()->user()->profile;
 
+        // Users can discover: public groups, groups they own/joined, and groups they are invited to.
         $studyGroups = StudyGroup::with(['user', 'members', 'invitations'])
             ->where('status', 'active')
             ->where(function ($query) {
@@ -57,6 +58,7 @@ class StudyGroupController extends Controller
                         (str_contains($groupCourse, 'informatics') && str_contains($myCourse, 'informatics'))
                     )
                 ) {
+                    // Course similarity gets the highest weight in the relevance score.
                     $score += 50;
                 }
 
@@ -75,6 +77,7 @@ class StudyGroupController extends Controller
                 foreach ($interestWords as $word) {
                     $word = rtrim($word, 's');
 
+                    // Small keyword overlap boosts ranking; long words reduce noisy matches.
                     if (strlen($word) > 2 && str_contains($groupText, $word)) {
                         $score += 10;
                     }
@@ -92,6 +95,7 @@ class StudyGroupController extends Controller
                 ->where('status', 'pending')
                 ->first();
 
+            // Keep "joined" and "invited" groups above generic discoverable groups.
             if ($group->is_joined) {
                 $group->sort_order = 1;
             } elseif ($group->my_invitation) {
@@ -125,6 +129,7 @@ class StudyGroupController extends Controller
         $canManageGroup = (int) $studyGroup->user_id === (int) Auth::id()
             || ($myMembership && in_array($myMembership->role, ['creator', 'admin']));
 
+        // Suspended groups are visible only to managers so they can resolve moderation/admin actions.
         if ($studyGroup->isSuspended() && !$canManageGroup) {
             abort(403);
         }
@@ -144,6 +149,7 @@ class StudyGroupController extends Controller
             !$isMember &&
             !$hasActiveInvitation
         ) {
+            // Private groups require ownership, membership, or a pending invitation.
             abort(403);
         }
 
@@ -160,6 +166,7 @@ class StudyGroupController extends Controller
             $myMembership && $studyGroup->members_can_invite
         );
 
+        // Invite options are restricted to accepted peer connections, excluding current members/pending invites.
         $connectedUserIds = PeerConnection::where('status', 'accepted')
             ->where(function ($query) {
                 $query->where('requester_id', Auth::id())
@@ -309,6 +316,7 @@ class StudyGroupController extends Controller
             'receiver_id' => 'required|exists:users,id',
         ]);
 
+        // Suspended/inactive accounts cannot receive new invitations.
         $receiver = User::query()->active()->find($validated['receiver_id']);
         if (!$receiver) {
             return back()->with('error', 'You can only invite active users.');
@@ -322,6 +330,7 @@ class StudyGroupController extends Controller
             return back()->with('success', 'This user is already a member of the group.');
         }
 
+        // firstOrCreate prevents duplicate pending invitations for the same receiver/group pair.
         GroupInvitation::firstOrCreate([
             'study_group_id' => $studyGroup->id,
             'receiver_id' => $validated['receiver_id'],
@@ -361,6 +370,7 @@ class StudyGroupController extends Controller
             !$request->hasFile('message_file') &&
             empty($validated['resource_link'])
         ) {
+            // Keep group chat payload meaningful: at least one content channel is required.
             return back()->with('error', 'Please type a message, attach a file, or add a link.');
         }
 
@@ -373,6 +383,7 @@ class StudyGroupController extends Controller
         }
 
         if (!empty($validated['resource_link'])) {
+            // Distinguish pure link messages from mixed file+link payloads.
             $messageType = $filePath ? 'mixed' : 'link';
         }
 
@@ -428,6 +439,7 @@ class StudyGroupController extends Controller
                 ->whereIn('role', ['creator', 'admin'])
                 ->count();
 
+            // Prevent creator from leaving if that would orphan admin control.
             if ($otherAdmins === 0) {
                 return back()->with('error', 'You are the only admin of this group. Promote another member before leaving.');
             }
@@ -554,6 +566,7 @@ class StudyGroupController extends Controller
         }
 
         if ($myRole === 'admin' && $member->role === 'admin') {
+            // Creator can remove admins, but admin-to-admin removal is blocked.
             return back()->with('error', 'Admins cannot remove other admins.');
         }
 
@@ -646,6 +659,7 @@ class StudyGroupController extends Controller
     {
         abort_unless((int) $studyGroup->user_id === (int) Auth::id(), 403);
 
+        // Clean up uploaded media before deleting the group record.
         if (!empty($studyGroup->group_picture)) {
             Storage::disk('public')->delete($studyGroup->group_picture);
         }
@@ -679,6 +693,7 @@ class StudyGroupController extends Controller
                 'user_id' => Auth::id(),
             ],
             [
+                // Re-requesting always resets the latest intent to pending.
                 'status' => 'pending',
             ]
         );
