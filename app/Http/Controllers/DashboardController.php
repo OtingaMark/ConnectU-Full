@@ -48,7 +48,7 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'studyGroupsCount',
             'skillsCount',
-            'resourcesCount',
+            //'resourcesCount',
             'messagesCount',
             'connectionRequests'
         ));

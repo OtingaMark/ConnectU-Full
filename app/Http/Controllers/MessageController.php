@@ -22,6 +22,7 @@ class MessageController extends Controller
         $draftMessage = trim((string) request('draft', ''));
         $messageMode = trim((string) request('mode', ''));
 
+        // Only active groups where the current user is a member appear in the chat list.
         $myGroups = StudyGroup::with(['messages.user', 'members'])
             ->where('status', 'active')
             ->whereHas('members', function ($q) use ($currentUserId) {
@@ -29,6 +30,7 @@ class MessageController extends Controller
             })
             ->get()
             ->map(function ($group) {
+                // Pre-compute latest message so the unified chat list can be sorted consistently.
                 $group->latest_message = $group->messages
                     ->sortByDesc('created_at')
                     ->first();
@@ -48,6 +50,7 @@ class MessageController extends Controller
             ->latest()
             ->get();
 
+        // Combine both directions to build one direct-chat sidebar list.
         $allMessages = $receivedMessages->concat($sentMessages);
 
         $chatUserIds = $allMessages->map(function ($message) use ($currentUserId) {
@@ -63,6 +66,7 @@ class MessageController extends Controller
             !$chatUserIds->contains($requestedUserId) &&
             User::active()->whereKey($requestedUserId)->exists()
         ) {
+            // If user came from a profile/connect action, include that target even with no history yet.
             $chatUserIds->push($requestedUserId);
         }
 
@@ -76,6 +80,7 @@ class MessageController extends Controller
 
             $user->latest_message = $latestMessage;
 
+            // Count unread incoming messages from this specific user for badge rendering.
             $user->unread_count = Message::where('sender_id', $user->id)
                 ->where('receiver_id', $currentUserId)
                 ->where('is_read', false)
@@ -103,6 +108,7 @@ class MessageController extends Controller
         $groupMessages = collect();
 
         if ($activeGroupId) {
+            // Group chat access is membership-gated.
             $activeGroup = StudyGroup::with(['messages.user', 'members'])
                 ->where('status', 'active')
                 ->whereHas('members', function ($q) use ($currentUserId) {
@@ -123,6 +129,7 @@ class MessageController extends Controller
             : (request('user') ?? optional($chatUsers->first())->id);
 
         if ($activeUserId) {
+            // Opening a direct thread marks unread messages from that user as read.
             Message::where('sender_id', $activeUserId)
                 ->where('receiver_id', $currentUserId)
                 ->where('is_read', false)
@@ -143,6 +150,7 @@ class MessageController extends Controller
             $isConnected = $connection && $connection->status === 'accepted';
 
             if (!$isConnected) {
+                // Limit unconnected outreach to 3 sent messages per target user.
                 $sentCount = Message::where('sender_id', $currentUserId)
                     ->where('receiver_id', $activeUserId)
                     ->count();
@@ -190,6 +198,7 @@ class MessageController extends Controller
 
         $receiverId = $validated['receiver_id'];
 
+        // Allow three content styles: text, attachment, or resource link (any one is enough).
         if (
             empty($validated['message']) &&
             !$request->hasFile('message_file') &&
@@ -222,6 +231,7 @@ class MessageController extends Controller
             }
 
             if (!$connection) {
+                // First cold message auto-creates a pending peer request.
                 $connection = PeerConnection::create([
                     'requester_id' => $currentUserId,
                     'receiver_id' => $receiverId,
@@ -238,6 +248,7 @@ class MessageController extends Controller
             $messageType = 'file';
         }
 
+        // If both a file and link exist, preserve that richer state as "mixed".
         if (!empty($validated['resource_link'])) {
             $messageType = $filePath ? 'mixed' : 'link';
         }
@@ -262,6 +273,7 @@ class MessageController extends Controller
      */
     public function attachment(Message $message)
     {
+        // Only sender or receiver can open the stored attachment.
         if ($message->sender_id !== Auth::id() && $message->receiver_id !== Auth::id()) {
             abort(403);
         }
@@ -278,6 +290,7 @@ class MessageController extends Controller
      */
     public function getMyGroups()
     {
+        // Helper endpoint used by UI pieces that need current active group membership.
         $myGroups = StudyGroup::whereHas('members', function ($q) {
             $q->where('user_id', auth()->id());
         })->where('status', 'active')->get();
@@ -292,6 +305,7 @@ class MessageController extends Controller
         StudyGroup $studyGroup
     )
     {
+        // Reuse the unified messages screen and focus a specific group via query string.
         return redirect()->route('messages.index', [
             'group' => $studyGroup->id
         ]);
