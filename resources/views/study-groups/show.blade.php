@@ -75,6 +75,20 @@
                     </a>
                 @endif
 
+                @if($isCreator)
+                    <form method="POST"
+                          action="{{ route('study-groups.destroy', $studyGroup->id) }}"
+                          onsubmit="return confirm('Delete this group permanently? This cannot be undone.');">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit"
+                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            Delete Group
+                        </button>
+                    </form>
+                @endif
+
                 <details class="relative">
                     <summary class="px-4 py-2 bg-red-100 text-red-700 rounded-lg cursor-pointer">Report Group</summary>
                     <div class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-lg p-4 z-20">
