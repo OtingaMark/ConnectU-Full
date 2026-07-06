@@ -136,11 +136,21 @@
                                             @endif
 
                                             @if($report->study_group_id)
+                                                @php
+                                                    $isGroupSuspended = strtolower(trim($report->studyGroup->status ?? 'active')) === 'suspended';
+                                                @endphp
+
                                                 <form method="POST" action="{{ route('admin.reports.suspend-group', $report) }}" class="flex gap-2">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <input type="text" name="suspension_reason" required minlength="5" placeholder="Group suspension reason" class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded">
-                                                    <button class="px-2 py-1 text-xs bg-orange-600 text-white rounded">Suspend Group</button>
+
+                                                    @if($isGroupSuspended)
+                                                        <input type="hidden" name="action" value="unsuspend">
+                                                        <button class="px-2 py-1 text-xs bg-green-600 text-white rounded">Unsuspend Group</button>
+                                                    @else
+                                                        <input type="text" name="suspension_reason" required minlength="5" placeholder="Group suspension reason" class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded">
+                                                        <button class="px-2 py-1 text-xs bg-orange-600 text-white rounded">Suspend Group</button>
+                                                    @endif
                                                 </form>
                                             @endif
 

@@ -136,7 +136,7 @@
             <p class="font-semibold">This group is suspended.</p>
             <p class="text-sm mt-1">Reason: {{ $studyGroup->suspension_reason ?: 'No reason provided.' }}</p>
 
-            @if($isCreator)
+            @if($canManageGroup)
                 <details class="mt-3">
                     <summary class="cursor-pointer font-semibold">Submit Group Appeal</summary>
 

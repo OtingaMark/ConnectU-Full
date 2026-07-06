@@ -11,6 +11,7 @@
                         <th>Course</th>
                         <th>Members</th>
                         <th>Creator</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -21,6 +22,13 @@
                             <td>{{ $group->course }}</td>
                             <td>{{ $group->members_count }}</td>
                             <td>{{ $group->user->name ?? 'Unknown' }}</td>
+                            <td>
+                                @if(strtolower(trim($group->status ?? 'active')) === 'suspended')
+                                    <span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs">Suspended</span>
+                                @else
+                                    <span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs">Active</span>
+                                @endif
+                            </td>
                             <td>
                                 <div class="flex flex-wrap gap-2">
                                     <a href="{{ route('study-groups.show', $group) }}"

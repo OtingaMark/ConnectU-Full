@@ -118,6 +118,38 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Suspend or unsuspend a study group from the admin panel.
+     */
+    public function suspendGroup(StudyGroup $studyGroup)
+    {
+        $this->ensureAdmin();
+
+        $request = request();
+
+        if (($request->input('action') ?? '') === 'unsuspend') {
+            $studyGroup->update([
+                'status' => 'active',
+                'suspension_reason' => null,
+                'suspended_at' => null,
+            ]);
+
+            return back()->with('success', 'Study group unsuspended successfully.');
+        }
+
+        $validated = $request->validate([
+            'suspension_reason' => 'required|string|min:5|max:1000',
+        ]);
+
+        $studyGroup->update([
+            'status' => 'suspended',
+            'suspension_reason' => $validated['suspension_reason'],
+            'suspended_at' => now(),
+        ]);
+
+        return back()->with('success', 'Study group suspended successfully.');
+    }
+
+    /**
      * Display the skill management listing.
      */
     public function skills()
@@ -466,15 +498,32 @@ class AdminDashboardController extends Controller
             return back()->with('error', 'This report is already completed.');
         }
 
-        $validated = $request->validate([
-            'suspension_reason' => 'required|string|min:5|max:1000',
-        ]);
-
         $group = $report->studyGroup;
 
         if (!$group) {
             return back()->with('error', 'This report is not targeting a study group.');
         }
+
+        if (($request->input('action') ?? '') === 'unsuspend') {
+            $group->update([
+                'status' => 'active',
+                'suspension_reason' => null,
+                'suspended_at' => null,
+            ]);
+
+            $report->update([
+                'status' => 'reviewed',
+                'admin_notes' => trim(($report->admin_notes ? $report->admin_notes . "\n" : '') . 'Group unsuspended via report action.'),
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+            ]);
+
+            return back()->with('success', 'Reported group unsuspended successfully.');
+        }
+
+        $validated = $request->validate([
+            'suspension_reason' => 'required|string|min:5|max:1000',
+        ]);
 
         $group->update([
             'status' => 'suspended',

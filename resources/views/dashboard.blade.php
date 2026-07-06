@@ -19,7 +19,9 @@
         <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow">
             <p class="text-gray-500">Learning Groups Joined</p>
             <h2 class="text-3xl font-bold text-blue-700">
-                {{ \App\Models\GroupMember::where('user_id', auth()->id())->count() }}
+                {{ \App\Models\GroupMember::where('user_id', auth()->id())->whereHas('studyGroup', function ($query) {
+                    $query->where('status', 'active');
+                })->count() }}
             </h2>
         </div>
 

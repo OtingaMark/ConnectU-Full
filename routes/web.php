@@ -48,6 +48,9 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/admin/study-groups/{studyGroup}', [AdminDashboardController::class, 'updateGroup'])
         ->name('admin.study-groups.update');
 
+    Route::patch('/admin/study-groups/{studyGroup}/suspend', [AdminDashboardController::class, 'suspendGroup'])
+        ->name('admin.groups.suspend');
+
     Route::get('/admin/skills', [AdminDashboardController::class, 'skills'])
         ->name('admin.skills.index');
 

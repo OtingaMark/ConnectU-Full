@@ -121,6 +121,7 @@ class StudyGroupController extends Controller
     public function show(StudyGroup $studyGroup)
     {
         $studyGroup->load(['user', 'members.user.profile', 'invitations.receiver', 'invitations.sender', 'messages.user']);
+        $isPlatformAdmin = strtolower(trim((string) (Auth::user()->role ?? ''))) === 'admin';
 
         $myMembership = GroupMember::where('study_group_id', $studyGroup->id)
             ->where('user_id', Auth::id())
@@ -130,7 +131,7 @@ class StudyGroupController extends Controller
             || ($myMembership && in_array($myMembership->role, ['creator', 'admin']));
 
         // Suspended groups are visible only to managers so they can resolve moderation/admin actions.
-        if ($studyGroup->isSuspended() && !$canManageGroup) {
+        if ($studyGroup->isSuspended() && !$canManageGroup && !$isPlatformAdmin) {
             abort(403);
         }
 
@@ -147,7 +148,8 @@ class StudyGroupController extends Controller
             $studyGroup->visibility === 'private' &&
             $studyGroup->user_id !== Auth::id() &&
             !$isMember &&
-            !$hasActiveInvitation
+            !$hasActiveInvitation &&
+            !$isPlatformAdmin
         ) {
             // Private groups require ownership, membership, or a pending invitation.
             abort(403);
@@ -755,7 +757,7 @@ class StudyGroupController extends Controller
     {
         $membership = GroupMember::where('study_group_id', $studyGroup->id)
             ->where('user_id', Auth::id())
-            ->where('role', 'creator')
+            ->whereIn('role', ['creator', 'admin'])
             ->first();
 
         if (!$membership) {
