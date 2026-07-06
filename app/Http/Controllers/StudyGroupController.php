@@ -640,6 +640,23 @@ class StudyGroupController extends Controller
     }
 
     /**
+     * Delete a study group owned by the current user.
+     */
+    public function destroy(StudyGroup $studyGroup)
+    {
+        abort_unless((int) $studyGroup->user_id === (int) Auth::id(), 403);
+
+        if (!empty($studyGroup->group_picture)) {
+            Storage::disk('public')->delete($studyGroup->group_picture);
+        }
+
+        $studyGroup->delete();
+
+        return redirect()->route('study-groups.index')
+            ->with('success', 'Learning group deleted successfully.');
+    }
+
+    /**
      * Submit a pending join request for groups requiring approval.
      */
     public function requestToJoin(StudyGroup $studyGroup)

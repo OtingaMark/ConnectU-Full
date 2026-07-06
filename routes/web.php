@@ -137,6 +137,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('study-groups.edit');
     Route::patch('/study-groups/{studyGroup}', [StudyGroupController::class, 'update'])
         ->name('study-groups.update');
+    Route::delete('/study-groups/{studyGroup}', [StudyGroupController::class, 'destroy'])
+        ->name('study-groups.destroy');
     Route::post('/study-groups/{studyGroup}/invite', [StudyGroupController::class, 'invite'])
         ->name('study-groups.invite');
     Route::post('/study-groups/{studyGroup}/messages', [StudyGroupController::class, 'sendMessage'])

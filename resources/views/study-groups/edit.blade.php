@@ -100,10 +100,26 @@
                 </div>
 
                 <div class="flex justify-between pt-4">
-                    <a href="{{ route('study-groups.show', $studyGroup->id) }}"
-                              class="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
-                        Cancel
-                    </a>
+                    <div class="flex gap-3">
+                        <a href="{{ route('study-groups.show', $studyGroup->id) }}"
+                                  class="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
+                            Cancel
+                        </a>
+
+                        @if(auth()->id() == $studyGroup->user_id)
+                            <form method="POST"
+                                  action="{{ route('study-groups.destroy', $studyGroup->id) }}"
+                                  onsubmit="return confirm('Delete this group permanently? This cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit"
+                                        class="px-5 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                    Delete Group
+                                </button>
+                            </form>
+                        @endif
+                    </div>
 
                     <button type="submit"
                             class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
