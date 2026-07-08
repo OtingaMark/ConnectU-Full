@@ -760,7 +760,9 @@ class StudyGroupController extends Controller
             ->whereIn('role', ['creator', 'admin'])
             ->first();
 
-        if (!$membership) {
+        $isOwner = (int) $studyGroup->user_id === (int) Auth::id();
+
+        if (!$membership && !$isOwner) {
             abort(403);
         }
 

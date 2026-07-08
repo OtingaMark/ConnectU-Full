@@ -7,7 +7,7 @@
             ->count() > 0;
 
         $myMembership = $studyGroup->members->where('user_id', auth()->id())->first();
-        $canManageGroup = $myMembership && in_array($myMembership->role, ['creator', 'admin']);
+        $canManageGroup = $isCreator || ($myMembership && in_array($myMembership->role, ['creator', 'admin']));
 
         $myInvitation = $studyGroup->invitations
             ->where('receiver_id', auth()->id())
@@ -68,7 +68,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-                @if($myMembership && in_array($myMembership->role, ['creator', 'admin']))
+                @if($canManageGroup)
                     <a href="{{ route('study-groups.edit', $studyGroup->id) }}"
                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                         Edit Group
