@@ -7,7 +7,8 @@
             ->count() > 0;
 
         $myMembership = $studyGroup->members->where('user_id', auth()->id())->first();
-        $canManageGroup = $isCreator || ($myMembership && in_array($myMembership->role, ['creator', 'admin']));
+        $myRole = strtolower(trim((string) ($myMembership->role ?? '')));
+        $canManageGroup = $isCreator || in_array($myRole, ['creator', 'admin'], true);
 
         $myInvitation = $studyGroup->invitations
             ->where('receiver_id', auth()->id())

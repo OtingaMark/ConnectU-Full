@@ -24,9 +24,21 @@ class StudyGroupController extends Controller
     {
         $myProfile = auth()->user()->profile;
 
-        // Users can discover: public groups, groups they own/joined, and groups they are invited to.
+        // Users can discover active groups, while suspended groups are only visible to creator/admin managers.
         $studyGroups = StudyGroup::with(['user', 'members', 'invitations'])
-            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->where('status', 'active')
+                    ->orWhere(function ($suspendedQuery) {
+                        $suspendedQuery->where('status', 'suspended')
+                            ->where(function ($managerQuery) {
+                                $managerQuery->where('user_id', Auth::id())
+                                    ->orWhereHas('members', function ($memberQuery) {
+                                        $memberQuery->where('user_id', Auth::id())
+                                            ->whereRaw('LOWER(TRIM(role)) IN (?, ?)', ['creator', 'admin']);
+                                    });
+                            });
+                    });
+            })
             ->where(function ($query) {
                 $query->where('visibility', 'public')
                     ->orWhere('user_id', Auth::id())
@@ -127,8 +139,10 @@ class StudyGroupController extends Controller
             ->where('user_id', Auth::id())
             ->first();
 
+        $myRole = strtolower(trim((string) ($myMembership->role ?? '')));
+
         $canManageGroup = (int) $studyGroup->user_id === (int) Auth::id()
-            || ($myMembership && in_array($myMembership->role, ['creator', 'admin']));
+            || in_array($myRole, ['creator', 'admin'], true);
 
         // Suspended groups are visible only to managers so they can resolve moderation/admin actions.
         if ($studyGroup->isSuspended() && !$canManageGroup && !$isPlatformAdmin) {
@@ -757,12 +771,14 @@ class StudyGroupController extends Controller
     {
         $membership = GroupMember::where('study_group_id', $studyGroup->id)
             ->where('user_id', Auth::id())
-            ->whereIn('role', ['creator', 'admin'])
             ->first();
+
+        $myRole = strtolower(trim((string) ($membership->role ?? '')));
+        $isManager = in_array($myRole, ['creator', 'admin'], true);
 
         $isOwner = (int) $studyGroup->user_id === (int) Auth::id();
 
-        if (!$membership && !$isOwner) {
+        if (!$isManager && !$isOwner) {
             abort(403);
         }
 
