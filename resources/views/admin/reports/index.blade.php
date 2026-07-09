@@ -94,7 +94,21 @@
                             </td>
 
                             <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">{{ $report->reason }}</td>
-                            <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">{{ $report->description ?: '-' }}</td>
+                            <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">
+                                <div>{{ $report->description ?: '-' }}</div>
+
+                                @if($report->evidence_path)
+                                    <a href="{{ asset('storage/' . $report->evidence_path) }}"
+                                       target="_blank"
+                                       class="mt-2 inline-block text-xs text-blue-600 hover:underline">
+                                        Open evidence screenshot
+                                    </a>
+
+                                    <img src="{{ asset('storage/' . $report->evidence_path) }}"
+                                         onclick="openImageViewer(this.src)"
+                                         class="mt-2 w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
+                                @endif
+                            </td>
                             <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">{{ $report->created_at->format('Y-m-d H:i') }}</td>
 
                             <td class="py-3">
@@ -222,7 +236,17 @@
                                 @endif
                             </td>
                             <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">{{ $report->reason }}</td>
-                            <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">{{ $report->admin_notes ?: '-' }}</td>
+                            <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">
+                                <div>{{ $report->admin_notes ?: '-' }}</div>
+
+                                @if($report->evidence_path)
+                                    <a href="{{ asset('storage/' . $report->evidence_path) }}"
+                                       target="_blank"
+                                       class="mt-2 inline-block text-xs text-blue-600 hover:underline">
+                                        Open evidence screenshot
+                                    </a>
+                                @endif
+                            </td>
                             <td class="py-3 pr-3 text-sm text-gray-700 dark:text-gray-200">{{ optional($report->reviewed_at)->format('Y-m-d H:i') ?: '-' }}</td>
                         </tr>
                     @empty

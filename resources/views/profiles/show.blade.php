@@ -45,7 +45,7 @@
                 <details class="mt-4">
                     <summary class="cursor-pointer text-sm text-red-600 font-semibold">Report User</summary>
 
-                    <form method="POST" action="{{ route('reports.store') }}" class="mt-3 space-y-2">
+                    <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data" class="mt-3 space-y-2">
                         @csrf
                         <input type="hidden" name="reported_user_id" value="{{ $user->id }}">
 
@@ -57,7 +57,12 @@
                             <option value="Other">Other</option>
                         </select>
 
-                        <textarea name="description" rows="3" placeholder="Describe the issue" class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+                           <textarea name="description" rows="3" placeholder="Describe the issue" class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
+
+                           <input type="file"
+                               name="evidence_image"
+                               accept="image/png,image/jpeg,image/webp"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
 
                         <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                             Submit Report

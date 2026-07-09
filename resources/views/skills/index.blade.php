@@ -402,11 +402,13 @@
                                 <div class="grid {{ $skillType === \App\Models\Skill::TYPE_EXCHANGE ? 'grid-cols-3' : 'grid-cols-2' }} gap-2 text-xs">
                                     <a href="{{ route('messages.index', ['user' => $skill->user_id]) }}"
                                        class="px-2 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-center">Message</a>
-                                    <form method="POST" action="{{ route('reports.store') }}">
+                                    <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data">
                                         @csrf
                                         <input type="hidden" name="reported_user_id" value="{{ $skill->user_id }}">
                                         <input type="hidden" name="reason" value="Inappropriate Content">
                                         <input type="hidden" name="description" value="Skill listing report from Skills directory.">
+                                        <input type="file" name="evidence_image" accept="image/png,image/jpeg,image/webp"
+                                               class="w-full mb-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 text-[11px]">
                                         <button type="submit" class="w-full px-2 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">Report</button>
                                     </form>
                                     @if($skillType === \App\Models\Skill::TYPE_EXCHANGE)

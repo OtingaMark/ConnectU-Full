@@ -178,11 +178,13 @@
                                             class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">Helpful</button>
                                     <button type="button" onclick="comingSoonFeedback('Reply to feedback will be enabled in a backend update.')"
                                             class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600">Reply</button>
-                                    <form method="POST" action="{{ route('reports.store') }}">
+                                    <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data">
                                         @csrf
                                         <input type="hidden" name="feedback_id" value="{{ $feedback->id }}">
                                         <input type="hidden" name="reason" value="Inappropriate Feedback">
                                         <input type="hidden" name="description" value="Reported from peer feedback panel.">
+                                        <input type="file" name="evidence_image" accept="image/png,image/jpeg,image/webp"
+                                               class="w-full mb-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 text-[11px]">
                                         <button type="submit" class="px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100">Report</button>
                                     </form>
                                 </div>

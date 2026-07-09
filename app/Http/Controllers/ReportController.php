@@ -10,6 +10,7 @@ use App\Models\Report;
 use App\Models\Skill;
 use App\Models\StudyGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
 {
@@ -27,6 +28,7 @@ class ReportController extends Controller
             'skill_id' => 'nullable|exists:skills,id',
             'reason' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'evidence_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
         $targets = [
@@ -103,6 +105,11 @@ class ReportController extends Controller
             $reportedUserId = $skill->user_id;
         }
 
+        $evidencePath = null;
+        if ($request->hasFile('evidence_image')) {
+            $evidencePath = $request->file('evidence_image')->store('report-evidence', 'public');
+        }
+
         Report::create([
             'reporter_id' => auth()->id(),
             'reported_user_id' => $reportedUserId,
@@ -113,6 +120,7 @@ class ReportController extends Controller
             'skill_id' => $validated['skill_id'] ?? null,
             'reason' => $validated['reason'],
             'description' => $validated['description'] ?? null,
+            'evidence_path' => $evidencePath,
             'status' => 'pending',
         ]);
 

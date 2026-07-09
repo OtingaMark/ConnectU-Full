@@ -16,6 +16,7 @@ class Report extends Model
         'skill_id',
         'reason',
         'description',
+        'evidence_path',
         'status',
         'admin_notes',
         'reviewed_by',

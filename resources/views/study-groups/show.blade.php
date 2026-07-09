@@ -93,7 +93,7 @@
                 <details class="relative">
                     <summary class="px-4 py-2 bg-red-100 text-red-700 rounded-lg cursor-pointer">Report Group</summary>
                     <div class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-lg p-4 z-20">
-                        <form method="POST" action="{{ route('reports.store') }}" class="space-y-2">
+                        <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data" class="space-y-2">
                             @csrf
                             <input type="hidden" name="study_group_id" value="{{ $studyGroup->id }}">
 
@@ -106,6 +106,11 @@
                             </select>
 
                             <textarea name="description" rows="3" placeholder="Describe the issue" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg px-3 py-2"></textarea>
+
+                            <input type="file"
+                                name="evidence_image"
+                                accept="image/png,image/jpeg,image/webp"
+                                class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg px-3 py-2 text-sm">
 
                             <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Submit Report</button>
                         </form>
