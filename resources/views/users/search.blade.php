@@ -55,15 +55,19 @@
                         View Profile
                     </a>
 
-                    @if($user->connection_status === 'accepted')
-                        <a href="{{ route('messages.index', ['user' => $user->id]) }}"
-                           class="px-4 py-2 bg-green-600 text-white rounded-lg">
-                            Message
-                        </a>
+                    <a href="{{ route('messages.index', ['user' => $user->id]) }}"
+                       class="px-4 py-2 bg-green-600 text-white rounded-lg">
+                        Message
+                    </a>
 
-                    @elseif($user->connection_status === 'pending')
+                    @if($user->connection_status === 'pending')
                         <span class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg">
                             Request Pending
+                        </span>
+
+                    @elseif($user->connection_status === 'accepted')
+                        <span class="px-4 py-2 bg-green-100 text-green-700 rounded-lg">
+                            Connected
                         </span>
 
                     @else

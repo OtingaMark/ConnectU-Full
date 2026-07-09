@@ -242,7 +242,14 @@
                                     {{ $message->user_id == auth()->id() ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white' }}">
 
                                     <div class="text-xs opacity-80 mb-1">
-                                        {{ $message->user->name ?? 'Unknown' }}
+                                        @if($message->user)
+                                            <a href="{{ route('users.show', $message->user->id) }}"
+                                               class="underline hover:no-underline">
+                                                {{ $message->user->name }}
+                                            </a>
+                                        @else
+                                            Unknown
+                                        @endif
                                     </div>
 
                                     @if($message->message)
@@ -339,10 +346,11 @@
 
                 {{-- Direct header --}}
                 <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center shrink-0">
-                    <div class="flex items-center gap-3">
+                    <a href="{{ route('users.show', $activeUser->id) }}"
+                       class="flex items-center gap-3 group">
                         @if($activeUser->profile?->profile_picture)
                             <img src="{{ asset('storage/' . $activeUser->profile->profile_picture) }}"
-                                 onclick="openImageViewer(this.src)"
+                                 onclick="event.preventDefault(); openImageViewer(this.src)"
                                  class="w-12 h-12 rounded-full object-cover cursor-pointer">
                         @else
                             <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
@@ -351,14 +359,14 @@
                         @endif
 
                         <div>
-                            <h2 class="font-bold text-gray-900 dark:text-white">
+                            <h2 class="font-bold text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400">
                                 {{ $activeUser->name }}
                             </h2>
                             <p class="text-sm text-blue-600">
                                 {{ $isExchangeMode ? 'Skill exchange chat' : 'ConnectU peer' }}
                             </p>
                         </div>
-                    </div>
+                    </a>
 
                     <details class="relative">
                         <summary class="text-gray-600 dark:text-gray-300 text-xl cursor-pointer">⋮</summary>
